@@ -1,85 +1,62 @@
 <div align="center">
 
-# applecal
+# Apple Calendar CLI
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 
-**A fast, EventKit-native Apple Calendar CLI for macOS**
-
-Machine-readable by default. Human-friendly when you need it.
+EventKit-native Apple Calendar CLI for macOS.  
+CLI binary name: `applecal`.
 
 </div>
 
----
+## Install
 
-## Why applecal?
-
-`applecal` gives you reliable command-line access to Apple Calendar with a stable JSON contract, predictable exit codes, and recurrence-safe mutation semantics.
-
-It is designed for two audiences:
-
-- **Humans** who want quick calendar operations from terminal scripts
-- **Agents/tools** that need deterministic output and robust error handling
-
----
-
-## Current status
-
-✅ Core CLI + EventKit runtime implemented locally  
-✅ Build + tests green  
-✅ Current app version target: `0.1.0` (SemVer)  
-✅ CI release lane implemented (universal binary, signing, notarization, GitHub release, Homebrew tap formula update)  
-⏳ First public tagged release/publish still pending
-
----
-
-## Features
-
-- EventKit-backed runtime (default)
-- Structured JSON envelope with schema versioning
-- Deterministic machine error codes + exit code mapping
-- Recurrence-aware create/update/delete semantics
-- Alarms support
-- Auth diagnostics (`doctor`, `auth status`, `auth grant`, `auth reset`)
-- Calendar + event workflows (`list`, `get`, `search`, `create`, `update`, `delete`)
-- Shell completions (`bash`, `zsh`, `fish`)
-
----
-
-## Build
+### Homebrew (recommended)
 
 ```bash
-swift build
-swift test
+brew tap Helmi/homebrew-tap
+brew install applecal
 ```
 
----
+### Direct binary download
+
+Download the latest `applecal-<version>-macos-universal.zip` from Releases:
+
+- https://github.com/Helmi/apple-calendar-cli/releases
+
+Install manually:
+
+```bash
+curl -L -o applecal.zip \
+  https://github.com/Helmi/apple-calendar-cli/releases/download/v0.1.0/applecal-0.1.0-macos-universal.zip
+unzip applecal.zip
+chmod +x applecal
+mv applecal /opt/homebrew/bin/applecal
+```
 
 ## Quick start
 
 ```bash
-# 1) Sanity + auth
-swift run applecal doctor --format json
-swift run applecal auth status --format json
+# Health + permission state
+applecal doctor --format json
+applecal auth status --format json
 
-# 2) Inspect calendars
-swift run applecal calendars list --format json
+# If needed, request full calendar access
+applecal auth grant --format json
 
-# 3) Create a recurring event
-swift run applecal events create \
-  --calendar cal-work \
+# List calendars
+applecal calendars list --format json
+
+# Create an event
+applecal events create \
+  --calendar "Work" \
   --title "Team Standup" \
   --start "2026-03-02T09:00:00+01:00" \
   --end "2026-03-02T09:30:00+01:00" \
-  --repeat weekly \
-  --byday mon,tue,wed,thu,fri \
-  --alarm-minutes -10 \
   --format json
 ```
 
----
-
-## Command surface
+## Commands
 
 - `doctor`
 - `auth status|grant|reset`
@@ -88,68 +65,22 @@ swift run applecal events create \
 - `completion bash|zsh|fish`
 - `schema`
 
----
-
 ## Versioning
 
-`applecal` uses **SemVer** for binary releases:
+Apple Calendar CLI follows SemVer (`MAJOR.MINOR.PATCH`).
 
-- `MAJOR.MINOR.PATCH` (e.g. `0.1.0`)
-- `MAJOR`: breaking CLI behavior/contract changes
-- `MINOR`: new backward-compatible features
-- `PATCH`: bugfixes and non-breaking improvements
+- Product release example: `0.1.0`
+- CLI binary: `applecal`
+- JSON schema version is tracked separately for machine contract stability.
 
-`binaryVersion` and `schemaVersion` are intentionally separate.
+## Build from source
 
-## JSON contract
-
-All JSON responses use a stable envelope:
-
-```json
-{
-  "ok": true,
-  "data": {},
-  "error": null,
-  "meta": {
-    "schemaVersion": "1.0.0",
-    "timestamp": "2026-02-24T11:00:00Z",
-    "command": "events list"
-  }
-}
+```bash
+git clone https://github.com/Helmi/apple-calendar-cli.git
+cd apple-calendar-cli
+swift build -c release
+swift test
 ```
-
----
-
-## Local runtime modes
-
-- **Default**: EventKit runtime (`EventKitCalendarStore`)
-- **Deterministic test mode**: `APPLECAL_STORE=in_memory`
-
-Auth behavior can be test-simulated via:
-
-- `APPLECAL_AUTH_STATE`
-- `APPLECAL_AUTH_GRANT_RESULT`
-
----
-
-## Documentation
-
-- Product requirements: `docs/PRD.md`
-- ADRs: `docs/adr/`
-- Privacy/telemetry policy: `docs/policy/privacy-telemetry.md`
-- Release auth notes: `docs/RELEASE_AUTH.md`
-- Contribution guide: `CONTRIBUTING.md`
-
----
-
-## Roadmap (next lane)
-
-- Launch assets
-- First public release execution + announcement
-
-No upload/publish has been performed yet.
-
----
 
 ## License
 
