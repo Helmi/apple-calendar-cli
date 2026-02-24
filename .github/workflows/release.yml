@@ -1,0 +1,145 @@
+name: Release (signed + notarized macOS binary)
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (e.g. v0.1.0)"
+        required: true
+        default: "v0.1.0"
+
+permissions:
+  contents: write
+
+env:
+  SWIFT_VERSION: "6.2"
+
+jobs:
+  build-sign-notarize-release:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout (tag push)
+        if: github.event_name == 'push'
+        uses: actions/checkout@v4
+
+      - name: Checkout (manual)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: ${{ env.SWIFT_VERSION }}
+
+      - name: Prepare keychain for signing certificate
+        env:
+          BUILD_KEYCHAIN_PASSWORD: ${{ secrets.BUILD_KEYCHAIN_PASSWORD }}
+          APPLE_CERT_P12_BASE64: ${{ secrets.APPLE_CERT_P12_BASE64 }}
+          APPLE_CERT_PASSWORD: ${{ secrets.APPLE_CERT_PASSWORD }}
+        run: |
+          set -euo pipefail
+          CERT_PATH="$RUNNER_TEMP/apple-cert.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/release.keychain-db"
+
+          echo "$APPLE_CERT_P12_BASE64" | base64 --decode > "$CERT_PATH"
+
+          security create-keychain -p "$BUILD_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security default-keychain -s "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$BUILD_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+
+          security import "$CERT_PATH" \
+            -k "$KEYCHAIN_PATH" \
+            -P "$APPLE_CERT_PASSWORD" \
+            -T /usr/bin/codesign
+
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign: \
+            -s \
+            -k "$BUILD_KEYCHAIN_PASSWORD" \
+            "$KEYCHAIN_PATH"
+
+      - name: Build release binaries (arm64 + x86_64)
+        run: |
+          set -euo pipefail
+          SWIFT_DISABLE_SANDBOX=1 swift build -c release --arch arm64
+          SWIFT_DISABLE_SANDBOX=1 swift build -c release --arch x86_64
+
+      - name: Lipo universal binary
+        run: |
+          set -euo pipefail
+          mkdir -p dist/release
+          cp .build/arm64-apple-macosx/release/applecal dist/release/applecal-arm64
+          cp .build/x86_64-apple-macosx/release/applecal dist/release/applecal-x86_64
+          lipo -create \
+            -output dist/release/applecal \
+            dist/release/applecal-arm64 \
+            dist/release/applecal-x86_64
+          file dist/release/applecal
+
+      - name: Sign binary
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: |
+          set -euo pipefail
+          codesign --force --timestamp --options runtime \
+            --sign "$APPLE_SIGNING_IDENTITY" \
+            dist/release/applecal
+          codesign --verify --verbose=2 dist/release/applecal
+
+      - name: Resolve release tag/version
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+          VERSION="${TAG#v}"
+          echo "RELEASE_TAG=${TAG}" >> "$GITHUB_ENV"
+          echo "RELEASE_VERSION=${VERSION}" >> "$GITHUB_ENV"
+
+      - name: Create zip + checksum
+        run: |
+          set -euo pipefail
+          ASSET_BASE="applecal-${RELEASE_VERSION}-macos-universal"
+
+          ditto -c -k --keepParent dist/release/applecal "dist/release/${ASSET_BASE}.zip"
+          shasum -a 256 "dist/release/${ASSET_BASE}.zip" > "dist/release/${ASSET_BASE}.zip.sha256"
+
+          echo "ASSET_BASE=${ASSET_BASE}" >> "$GITHUB_ENV"
+
+      - name: Notarize zip
+        env:
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+          APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          KEY_PATH="$RUNNER_TEMP/AuthKey_${APPLE_API_KEY_ID}.p8"
+          printf '%s' "$APPLE_API_PRIVATE_KEY" > "$KEY_PATH"
+
+          xcrun notarytool submit "dist/release/${ASSET_BASE}.zip" \
+            --key "$KEY_PATH" \
+            --key-id "$APPLE_API_KEY_ID" \
+            --issuer "$APPLE_API_ISSUER_ID" \
+            --wait
+
+      - name: Gatekeeper verification
+        run: |
+          spctl -a -vv -t install dist/release/applecal
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          generate_release_notes: true
+          files: |
+            dist/release/${{ env.ASSET_BASE }}.zip
+            dist/release/${{ env.ASSET_BASE }}.zip.sha256
