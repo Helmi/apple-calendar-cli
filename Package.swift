@@ -8,16 +8,30 @@ let package = Package(
         .macOS(.v14),
     ],
     products: [
-        .executable(name: "applecal", targets: ["applecal"]),
+        .executable(name: "applecal", targets: ["App"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0"),
     ],
     targets: [
         .executableTarget(
-            name: "applecal",
+            name: "App",
             dependencies: [
+                "AppCore",
+                "EventKitAdapter",
+                "Formatting",
+                "Diagnostics",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
+            ]
+        ),
+        .target(name: "AppCore"),
+        .target(name: "EventKitAdapter"),
+        .target(name: "Formatting"),
+        .target(name: "Diagnostics"),
+        .testTarget(
+            name: "AppleCalTests",
+            dependencies: [
+                "AppCore",
             ]
         ),
     ]
