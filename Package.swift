@@ -25,13 +25,29 @@ let package = Package(
             ]
         ),
         .target(name: "AppCore"),
-        .target(name: "EventKitAdapter"),
-        .target(name: "Formatting"),
-        .target(name: "Diagnostics"),
+        .target(
+            name: "EventKitAdapter",
+            dependencies: ["AppCore"]
+        ),
+        .target(
+            name: "Formatting",
+            dependencies: ["AppCore"]
+        ),
+        .target(
+            name: "Diagnostics",
+            dependencies: [
+                "AppCore",
+                "EventKitAdapter",
+            ]
+        ),
         .testTarget(
             name: "AppleCalTests",
             dependencies: [
                 "AppCore",
+                "App",
+                "Formatting",
+                "EventKitAdapter",
+                "Diagnostics",
             ]
         ),
     ]

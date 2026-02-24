@@ -1,0 +1,21 @@
+opt_in_rules:
+  - empty_count
+  - closure_end_indentation
+  - sorted_imports
+
+excluded:
+  - .build
+
+line_length:
+  warning: 120
+  ignores_comments: true
+
+type_name:
+  min_length: 3
+
+identifier_name:
+  min_length: 2
+  excluded:
+    - id
+    - to
+    - ok
