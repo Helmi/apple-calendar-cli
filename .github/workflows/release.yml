@@ -179,10 +179,8 @@ jobs:
     needs: build-sign-notarize-release
 
     steps:
-      - name: Checkout release commit
+      - name: Checkout workflow branch (contains helper scripts)
         uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.build-sign-notarize-release.outputs.release_tag }}
 
       - name: Validate Homebrew tap token
         env:
