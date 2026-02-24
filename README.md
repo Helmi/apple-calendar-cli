@@ -123,6 +123,7 @@ Auth behavior can be test-simulated via:
 - ADRs: `docs/adr/`
 - Privacy/telemetry policy: `docs/policy/privacy-telemetry.md`
 - Release auth notes: `docs/RELEASE_AUTH.md`
+- Contribution guide: `CONTRIBUTING.md`
 
 ---
 

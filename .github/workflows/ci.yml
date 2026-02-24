@@ -1,19 +1,63 @@
-name: ci
+name: CI
 
 on:
   pull_request:
   push:
-    branches: [main]
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  SWIFT_VERSION: "6.2"
 
 jobs:
   build-test:
+    name: Build + Test
     runs-on: macos-14
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: swift-actions/setup-swift@v2
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v2
         with:
-          swift-version: "6.2"
-      - name: Build
-        run: swift build
+          swift-version: ${{ env.SWIFT_VERSION }}
+
+      - name: Cache SwiftPM artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build
+            ~/.swiftpm
+          key: ${{ runner.os }}-swift-${{ env.SWIFT_VERSION }}-${{ hashFiles('Package.swift', 'Package.resolved', '.swiftformat', '.swiftlint.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-swift-${{ env.SWIFT_VERSION }}-
+
+      - name: Resolve dependencies
+        run: swift package resolve
+
+      - name: Build (debug)
+        run: swift build -c debug
+
+      - name: Build (release)
+        run: swift build -c release
+
       - name: Test
-        run: swift test
+        run: swift test --parallel
+
+      - name: Install lint tooling
+        run: brew install swiftformat swiftlint
+
+      - name: SwiftFormat (lint mode)
+        run: swiftformat . --lint
+
+      - name: SwiftLint
+        run: swiftlint lint --strict
