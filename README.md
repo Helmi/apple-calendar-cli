@@ -1,29 +1,67 @@
+<div align="center">
+
 # applecal
 
-EventKit-native Apple Calendar CLI for macOS, optimized for both humans and agents.
+**A fast, EventKit-native Apple Calendar CLI for macOS**
 
-## Status
+Machine-readable by default. Human-friendly when you need it.
 
-Local development build. Core command surface and JSON contract are implemented in-repo.
+</div>
+
+---
+
+## Why applecal?
+
+`applecal` gives you reliable command-line access to Apple Calendar with a stable JSON contract, predictable exit codes, and recurrence-safe mutation semantics.
+
+It is designed for two audiences:
+
+- **Humans** who want quick calendar operations from terminal scripts
+- **Agents/tools** that need deterministic output and robust error handling
+
+---
+
+## Current status
+
+✅ Core CLI + EventKit runtime implemented locally  
+✅ Build + tests green  
+⏳ Release/distribution lane (GitHub release pipeline, notarization, Homebrew, publishing) still pending
+
+---
+
+## Features
+
+- EventKit-backed runtime (default)
+- Structured JSON envelope with schema versioning
+- Deterministic machine error codes + exit code mapping
+- Recurrence-aware create/update/delete semantics
+- Alarms support
+- Auth diagnostics (`doctor`, `auth status`, `auth grant`, `auth reset`)
+- Calendar + event workflows (`list`, `get`, `search`, `create`, `update`, `delete`)
+- Shell completions (`bash`, `zsh`, `fish`)
+
+---
 
 ## Build
 
 ```bash
 swift build
+swift test
 ```
 
-## Quickstart
+---
+
+## Quick start
 
 ```bash
-# Diagnostics + auth
+# 1) Sanity + auth
 swift run applecal doctor --format json
 swift run applecal auth status --format json
 
-# Calendars
+# 2) Inspect calendars
 swift run applecal calendars list --format json
-swift run applecal calendars get --id cal-default --format json
 
-# Create a recurring event
+# 3) Create a recurring event
 swift run applecal events create \
   --calendar cal-work \
   --title "Team Standup" \
@@ -35,7 +73,9 @@ swift run applecal events create \
   --format json
 ```
 
-## Command groups
+---
+
+## Command surface
 
 - `doctor`
 - `auth status|grant|reset`
@@ -44,9 +84,11 @@ swift run applecal events create \
 - `completion bash|zsh|fish`
 - `schema`
 
-## Output contract
+---
 
-JSON mode returns a stable envelope:
+## JSON contract
+
+All JSON responses use a stable envelope:
 
 ```json
 {
@@ -61,9 +103,35 @@ JSON mode returns a stable envelope:
 }
 ```
 
-## Notes
+---
 
-- Runtime is EventKit-backed by default.
-- For deterministic local fixture mode, set `APPLECAL_STORE=in_memory`.
-- Auth diagnostics/grant flow can be environment-simulated for tests (`APPLECAL_AUTH_STATE`, `APPLECAL_AUTH_GRANT_RESULT`).
-- Release publishing, notarization, and Homebrew distribution are intentionally deferred to release tasks.
+## Local runtime modes
+
+- **Default**: EventKit runtime (`EventKitCalendarStore`)
+- **Deterministic test mode**: `APPLECAL_STORE=in_memory`
+
+Auth behavior can be test-simulated via:
+
+- `APPLECAL_AUTH_STATE`
+- `APPLECAL_AUTH_GRANT_RESULT`
+
+---
+
+## Documentation
+
+- Product requirements: `docs/PRD.md`
+- ADRs: `docs/adr/`
+- Privacy/telemetry policy: `docs/policy/privacy-telemetry.md`
+- Release auth notes: `docs/RELEASE_AUTH.md`
+
+---
+
+## Roadmap (next lane)
+
+- GitHub repo + branch protection setup
+- Tagged release workflow (universal binaries)
+- Notarization + code-signing integration
+- Homebrew distribution
+- Skills publishing + launch assets
+
+No upload/publish has been performed yet.
