@@ -63,6 +63,7 @@ JSON mode returns a stable envelope:
 
 ## Notes
 
-- Current implementation uses an in-memory store for deterministic local development and testability.
-- EventKit auth diagnostics/grant flow are wired and can be environment-simulated for test scenarios.
+- Runtime is EventKit-backed by default.
+- For deterministic local fixture mode, set `APPLECAL_STORE=in_memory`.
+- Auth diagnostics/grant flow can be environment-simulated for tests (`APPLECAL_AUTH_STATE`, `APPLECAL_AUTH_GRANT_RESULT`).
 - Release publishing, notarization, and Homebrew distribution are intentionally deferred to release tasks.

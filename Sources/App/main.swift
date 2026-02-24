@@ -94,7 +94,13 @@ struct GlobalOutputOptions: ParsableArguments {
 }
 
 enum CLI {
-    static let store = InMemoryCalendarStore.shared
+    static let store: any CalendarStore = {
+        let mode = ProcessInfo.processInfo.environment["APPLECAL_STORE"]?.lowercased()
+        if mode == "in_memory" {
+            return InMemoryCalendarStore.shared
+        }
+        return EventKitCalendarStore.shared
+    }()
 
     static func printSuccess<T: Codable & Sendable>(
         command: String,
@@ -301,7 +307,7 @@ struct CalendarsListCommand: ParsableCommand {
     @OptionGroup var output: GlobalOutputOptions
 
     mutating func run() throws {
-        let calendars = CLI.store.listCalendars()
+        let calendars = try CLI.store.listCalendars()
         try CLI.printSuccess(command: "calendars list", data: calendars, options: output) {
             OutputPrinter.renderTable(
                 headers: ["id", "title", "source", "color", "writable"],

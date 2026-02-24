@@ -1,6 +1,6 @@
 import Foundation
 
-public final class InMemoryCalendarStore: @unchecked Sendable {
+public final class InMemoryCalendarStore: CalendarStore, @unchecked Sendable {
     public static let shared = InMemoryCalendarStore()
 
     private var calendars: [CalendarRecord]
@@ -17,7 +17,7 @@ public final class InMemoryCalendarStore: @unchecked Sendable {
         eventsByID = Dictionary(uniqueKeysWithValues: events.map { ($0.id, $0) })
     }
 
-    public func listCalendars() -> [CalendarRecord] {
+    public func listCalendars() throws -> [CalendarRecord] {
         calendars.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
     }
 
