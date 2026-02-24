@@ -2,6 +2,8 @@
 
 # applecal
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+
 **A fast, EventKit-native Apple Calendar CLI for macOS**
 
 Machine-readable by default. Human-friendly when you need it.
@@ -148,3 +150,9 @@ Auth behavior can be test-simulated via:
 - Launch assets
 
 No upload/publish has been performed yet.
+
+---
+
+## License
+
+MIT — see `LICENSE`.
