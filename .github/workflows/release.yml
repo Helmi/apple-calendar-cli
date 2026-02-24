@@ -16,10 +16,16 @@ permissions:
 
 env:
   SWIFT_VERSION: "6.2"
+  HOMEBREW_TAP_REPOSITORY: ${{ vars.HOMEBREW_TAP_REPOSITORY || 'helmi/homebrew-tap' }}
 
 jobs:
   build-sign-notarize-release:
     runs-on: macos-14
+    outputs:
+      release_tag: ${{ steps.resolve-release.outputs.release_tag }}
+      release_version: ${{ steps.resolve-release.outputs.release_version }}
+      asset_base: ${{ steps.package-asset.outputs.asset_base }}
+      asset_sha256: ${{ steps.package-asset.outputs.asset_sha256 }}
 
     steps:
       - name: Checkout (tag push)
@@ -94,6 +100,7 @@ jobs:
           codesign --verify --verbose=2 dist/release/applecal
 
       - name: Resolve release tag/version
+        id: resolve-release
         run: |
           set -euo pipefail
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
@@ -102,18 +109,28 @@ jobs:
             TAG="${GITHUB_REF_NAME}"
           fi
           VERSION="${TAG#v}"
+
           echo "RELEASE_TAG=${TAG}" >> "$GITHUB_ENV"
           echo "RELEASE_VERSION=${VERSION}" >> "$GITHUB_ENV"
 
+          echo "release_tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "release_version=${VERSION}" >> "$GITHUB_OUTPUT"
+
       - name: Create zip + checksum
+        id: package-asset
         run: |
           set -euo pipefail
           ASSET_BASE="applecal-${RELEASE_VERSION}-macos-universal"
 
           ditto -c -k --keepParent dist/release/applecal "dist/release/${ASSET_BASE}.zip"
           shasum -a 256 "dist/release/${ASSET_BASE}.zip" > "dist/release/${ASSET_BASE}.zip.sha256"
+          ASSET_SHA256="$(awk '{print $1}' "dist/release/${ASSET_BASE}.zip.sha256")"
 
           echo "ASSET_BASE=${ASSET_BASE}" >> "$GITHUB_ENV"
+          echo "ASSET_SHA256=${ASSET_SHA256}" >> "$GITHUB_ENV"
+
+          echo "asset_base=${ASSET_BASE}" >> "$GITHUB_OUTPUT"
+          echo "asset_sha256=${ASSET_SHA256}" >> "$GITHUB_OUTPUT"
 
       - name: Notarize zip
         env:
@@ -143,3 +160,59 @@ jobs:
           files: |
             dist/release/${{ env.ASSET_BASE }}.zip
             dist/release/${{ env.ASSET_BASE }}.zip.sha256
+
+  update-homebrew-tap:
+    name: Update Homebrew tap formula
+    runs-on: ubuntu-latest
+    needs: build-sign-notarize-release
+
+    steps:
+      - name: Checkout release commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.build-sign-notarize-release.outputs.release_tag }}
+
+      - name: Validate Homebrew tap token
+        env:
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${HOMEBREW_TAP_GITHUB_TOKEN:-}" ]]; then
+            echo "::error::Missing required secret HOMEBREW_TAP_GITHUB_TOKEN"
+            exit 1
+          fi
+
+      - name: Clone Homebrew tap
+        env:
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git clone \
+            "https://x-access-token:${HOMEBREW_TAP_GITHUB_TOKEN}@github.com/${HOMEBREW_TAP_REPOSITORY}.git" \
+            "$RUNNER_TEMP/homebrew-tap"
+
+      - name: Render Formula/applecal.rb
+        run: |
+          set -euo pipefail
+          scripts/render-homebrew-formula.sh \
+            --version "${{ needs.build-sign-notarize-release.outputs.release_version }}" \
+            --sha256 "${{ needs.build-sign-notarize-release.outputs.asset_sha256 }}" \
+            --repo "${{ github.repository }}" \
+            --asset-base "${{ needs.build-sign-notarize-release.outputs.asset_base }}" \
+            --output "$RUNNER_TEMP/homebrew-tap/Formula/applecal.rb"
+
+      - name: Commit + push formula update
+        working-directory: ${{ runner.temp }}/homebrew-tap
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet -- Formula/applecal.rb; then
+            echo "Formula already up to date; nothing to commit."
+            exit 0
+          fi
+
+          git add Formula/applecal.rb
+          git commit -m "applecal ${{ needs.build-sign-notarize-release.outputs.release_tag }}"
+          git push origin HEAD

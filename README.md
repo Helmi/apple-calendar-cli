@@ -28,7 +28,8 @@ It is designed for two audiences:
 ✅ Core CLI + EventKit runtime implemented locally  
 ✅ Build + tests green  
 ✅ Current app version target: `0.1.0` (SemVer)  
-⏳ Release/distribution lane (GitHub release pipeline, notarization, Homebrew, publishing) still pending
+✅ CI release lane implemented (universal binary, signing, notarization, GitHub release, Homebrew tap formula update)  
+⏳ First public tagged release/publish still pending
 
 ---
 
@@ -143,11 +144,8 @@ Auth behavior can be test-simulated via:
 
 ## Roadmap (next lane)
 
-- GitHub repo + branch protection setup
-- Tagged release workflow (universal binaries)
-- Notarization + code-signing integration
-- Homebrew distribution
 - Launch assets
+- First public release execution + announcement
 
 No upload/publish has been performed yet.
 
