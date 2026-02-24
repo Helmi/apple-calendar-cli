@@ -47,13 +47,25 @@ jobs:
         env:
           BUILD_KEYCHAIN_PASSWORD: ${{ secrets.BUILD_KEYCHAIN_PASSWORD }}
           APPLE_CERT_P12_BASE64: ${{ secrets.APPLE_CERT_P12_BASE64 }}
+          APPLE_CERT_P12_BASE64_PART1: ${{ secrets.APPLE_CERT_P12_BASE64_PART1 }}
+          APPLE_CERT_P12_BASE64_PART2: ${{ secrets.APPLE_CERT_P12_BASE64_PART2 }}
           APPLE_CERT_PASSWORD: ${{ secrets.APPLE_CERT_PASSWORD }}
         run: |
           set -euo pipefail
           CERT_PATH="$RUNNER_TEMP/apple-cert.p12"
           KEYCHAIN_PATH="$RUNNER_TEMP/release.keychain-db"
 
-          echo "$APPLE_CERT_P12_BASE64" | base64 --decode > "$CERT_PATH"
+          CERT_B64="${APPLE_CERT_P12_BASE64:-}"
+          if [[ -z "$CERT_B64" ]]; then
+            CERT_B64="${APPLE_CERT_P12_BASE64_PART1:-}${APPLE_CERT_P12_BASE64_PART2:-}"
+          fi
+
+          if [[ -z "$CERT_B64" ]]; then
+            echo "::error::Missing certificate payload. Set APPLE_CERT_P12_BASE64 or APPLE_CERT_P12_BASE64_PART1/PART2."
+            exit 1
+          fi
+
+          printf '%s' "$CERT_B64" | base64 --decode > "$CERT_PATH"
 
           security create-keychain -p "$BUILD_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security default-keychain -s "$KEYCHAIN_PATH"
