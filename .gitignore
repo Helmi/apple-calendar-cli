@@ -1,2 +1,4 @@
 .todos/
 .td-root
+.build/
+.swiftpm/
