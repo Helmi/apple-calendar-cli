@@ -4,21 +4,21 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 
-EventKit-native Apple Calendar CLI for macOS.  
+🗓️ EventKit-native Apple Calendar CLI for macOS.  
 CLI binary name: `applecal`.
 
 </div>
 
-## Install
+## 🚀 Install
 
-### Homebrew (recommended)
+### 🍺 Homebrew (recommended)
 
 ```bash
 brew tap Helmi/homebrew-tap
 brew install applecal
 ```
 
-### Direct binary download
+### ⬇️ Direct binary download
 
 Download the latest `applecal-<version>-macos-universal.zip` from Releases:
 
@@ -34,7 +34,7 @@ chmod +x applecal
 mv applecal /opt/homebrew/bin/applecal
 ```
 
-## Quick start
+## ⚡ Quick start
 
 ```bash
 # Health + permission state
@@ -56,7 +56,7 @@ applecal events create \
   --format json
 ```
 
-## Commands
+## 🧰 Commands
 
 - `doctor`
 - `auth status|grant|reset`
@@ -65,7 +65,7 @@ applecal events create \
 - `completion bash|zsh|fish`
 - `schema`
 
-## Versioning
+## 🔖 Versioning
 
 Apple Calendar CLI follows SemVer (`MAJOR.MINOR.PATCH`).
 
@@ -73,7 +73,7 @@ Apple Calendar CLI follows SemVer (`MAJOR.MINOR.PATCH`).
 - CLI binary: `applecal`
 - JSON schema version is tracked separately for machine contract stability.
 
-## Build from source
+## 🛠️ Build from source
 
 ```bash
 git clone https://github.com/Helmi/apple-calendar-cli.git
@@ -82,6 +82,6 @@ swift build -c release
 swift test
 ```
 
-## License
+## 📄 License
 
 MIT — see `LICENSE`.
