@@ -133,6 +133,6 @@ Auth behavior can be test-simulated via:
 - Tagged release workflow (universal binaries)
 - Notarization + code-signing integration
 - Homebrew distribution
-- Skills publishing + launch assets
+- Launch assets
 
 No upload/publish has been performed yet.

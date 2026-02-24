@@ -2,3 +2,12 @@
 .td-root
 .build/
 .swiftpm/
+
+# local-only workspace/control files
+AGENTS.md
+
+# generated artifacts
+dist/
+
+# deferred for now
+skills/
