@@ -25,6 +25,7 @@ It is designed for two audiences:
 
 ✅ Core CLI + EventKit runtime implemented locally  
 ✅ Build + tests green  
+✅ Current app version target: `0.1.0` (SemVer)  
 ⏳ Release/distribution lane (GitHub release pipeline, notarization, Homebrew, publishing) still pending
 
 ---
@@ -85,6 +86,17 @@ swift run applecal events create \
 - `schema`
 
 ---
+
+## Versioning
+
+`applecal` uses **SemVer** for binary releases:
+
+- `MAJOR.MINOR.PATCH` (e.g. `0.1.0`)
+- `MAJOR`: breaking CLI behavior/contract changes
+- `MINOR`: new backward-compatible features
+- `PATCH`: bugfixes and non-breaking improvements
+
+`binaryVersion` and `schemaVersion` are intentionally separate.
 
 ## JSON contract
 
