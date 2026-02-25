@@ -11,3 +11,11 @@ dist/
 
 # deferred for now
 skills/
+
+# private internal notes (not public)
+docs/LOGBOOK.md
+docs/RELEASE_AUTH.md
+docs/PRD.md
+docs/adr/
+docs/website/
+private/
