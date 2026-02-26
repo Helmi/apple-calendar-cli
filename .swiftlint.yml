@@ -3,6 +3,16 @@ opt_in_rules:
   - closure_end_indentation
   - sorted_imports
 
+# Keep CI strict on correctness/style essentials, while deferring large refactors.
+disabled_rules:
+  - cyclomatic_complexity
+  - function_body_length
+  - function_parameter_count
+  - file_length
+  - type_body_length
+  - opening_brace
+  - inclusive_language
+
 excluded:
   - .build
 

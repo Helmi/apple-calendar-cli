@@ -40,6 +40,11 @@ public struct AppleCalEnvelope<T: Codable & Sendable>: Codable, Sendable {
     }
 
     public static func failure(_ error: AppleCalError, command: String) -> AppleCalEnvelope<T> {
-        AppleCalEnvelope(ok: false, data: nil, error: AppleCalEnvelopeError(error: error), meta: AppleCalEnvelopeMeta(command: command))
+        AppleCalEnvelope(
+            ok: false,
+            data: nil,
+            error: AppleCalEnvelopeError(error: error),
+            meta: AppleCalEnvelopeMeta(command: command)
+        )
     }
 }

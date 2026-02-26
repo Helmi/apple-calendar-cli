@@ -5,13 +5,13 @@ import PackageDescription
 let package = Package(
     name: "applecal",
     platforms: [
-        .macOS(.v14),
+        .macOS(.v14)
     ],
     products: [
-        .executable(name: "applecal", targets: ["App"]),
+        .executable(name: "applecal", targets: ["App"])
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0"),
+        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0")
     ],
     targets: [
         .executableTarget(
@@ -21,7 +21,7 @@ let package = Package(
                 "EventKitAdapter",
                 "Formatting",
                 "Diagnostics",
-                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .product(name: "ArgumentParser", package: "swift-argument-parser")
             ]
         ),
         .target(name: "AppCore"),
@@ -37,7 +37,7 @@ let package = Package(
             name: "Diagnostics",
             dependencies: [
                 "AppCore",
-                "EventKitAdapter",
+                "EventKitAdapter"
             ]
         ),
         .testTarget(
@@ -47,8 +47,8 @@ let package = Package(
                 "App",
                 "Formatting",
                 "EventKitAdapter",
-                "Diagnostics",
+                "Diagnostics"
             ]
-        ),
+        )
     ]
 )

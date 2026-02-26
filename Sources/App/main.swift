@@ -28,7 +28,7 @@ struct AppleCal: ParsableCommand {
             CalendarsCommand.self,
             EventsCommand.self,
             CompletionCommand.self,
-            SchemaCommand.self,
+            SchemaCommand.self
         ]
     )
 
@@ -111,7 +111,7 @@ enum CLI {
         switch options.resolvedFormat {
         case .json:
             let payload = AppleCalEnvelope<T>.success(data, command: command)
-            Swift.print(try OutputPrinter.renderJSON(payload, pretty: options.pretty))
+            try Swift.print(OutputPrinter.renderJSON(payload, pretty: options.pretty))
         case .table:
             Swift.print(tableRenderer())
         }
@@ -188,7 +188,7 @@ struct DoctorCommand: ParsableCommand {
                 ("binaryVersion", report.binaryVersion),
                 ("macOSVersion", report.macOSVersion),
                 ("eventKitAvailable", String(report.eventKitAvailable)),
-                ("authorization", report.authorization.rawValue),
+                ("authorization", report.authorization.rawValue)
             ])
         }
     }
@@ -201,7 +201,7 @@ struct AuthCommand: ParsableCommand {
         subcommands: [
             AuthStatusCommand.self,
             AuthGrantCommand.self,
-            AuthResetCommand.self,
+            AuthResetCommand.self
         ]
     )
 
@@ -230,7 +230,7 @@ struct AuthStatusCommand: ParsableCommand {
         try CLI.printSuccess(command: "auth status", data: payload, options: output) {
             CLI.keyValueTable([
                 ("authorization", payload.authorization.rawValue),
-                ("writable", String(payload.writable)),
+                ("writable", String(payload.writable))
             ])
         }
     }
@@ -256,7 +256,7 @@ struct AuthGrantCommand: ParsableCommand {
         try CLI.printSuccess(command: "auth grant", data: payload, options: output) {
             CLI.keyValueTable([
                 ("authorization", payload.authorization.rawValue),
-                ("granted", String(payload.granted)),
+                ("granted", String(payload.granted))
             ])
         }
     }
@@ -289,7 +289,7 @@ struct CalendarsCommand: ParsableCommand {
         abstract: "Inspect available calendars.",
         subcommands: [
             CalendarsListCommand.self,
-            CalendarsGetCommand.self,
+            CalendarsGetCommand.self
         ]
     )
 
@@ -345,7 +345,7 @@ struct CalendarsGetCommand: ParsableCommand {
                 ("title", calendar.title),
                 ("source", calendar.source),
                 ("color", calendar.colorHex),
-                ("writable", String(calendar.writable)),
+                ("writable", String(calendar.writable))
             ])
         }
     }
@@ -361,7 +361,7 @@ struct EventsCommand: ParsableCommand {
             EventsSearchCommand.self,
             EventsCreateCommand.self,
             EventsUpdateCommand.self,
-            EventsDeleteCommand.self,
+            EventsDeleteCommand.self
         ]
     )
 
@@ -433,7 +433,7 @@ struct EventsGetCommand: ParsableCommand {
                 ("end", event.end),
                 ("allDay", String(event.allDay)),
                 ("recurrence", event.recurrence?.rrule ?? event.recurrence?.frequency.rawValue ?? "none"),
-                ("revision", String(event.revision)),
+                ("revision", String(event.revision))
             ])
         }
     }
@@ -520,7 +520,11 @@ struct EventsCreateCommand: ParsableCommand {
     @Option(name: .long, help: "Advanced RRULE string.")
     var rrule: String?
 
-    @Option(name: .long, parsing: .unconditionalSingleValue, help: "Alarm offsets in minutes relative to start, usually negative.")
+    @Option(
+        name: .long,
+        parsing: .unconditionalSingleValue,
+        help: "Alarm offsets in minutes relative to start, usually negative."
+    )
     var alarmMinutes: [Int] = []
 
     @OptionGroup var output: GlobalOutputOptions
@@ -568,7 +572,7 @@ struct EventsCreateCommand: ParsableCommand {
                 ("title", event.title),
                 ("start", event.start),
                 ("end", event.end),
-                ("recurrence", event.recurrence?.rrule ?? event.recurrence?.frequency.rawValue ?? "none"),
+                ("recurrence", event.recurrence?.rrule ?? event.recurrence?.frequency.rawValue ?? "none")
             ])
         }
     }
@@ -633,11 +637,11 @@ struct EventsUpdateCommand: ParsableCommand {
             rrule: rrule
         ))
 
-        if [title, start, end, location, notes, url].allSatisfy({ $0 == nil })
-            && allDay == nil
-            && recurrence == nil
-            && !clearRecurrence
-            && alarmMinutes.isEmpty
+        if [title, start, end, location, notes, url].allSatisfy({ $0 == nil }),
+           allDay == nil,
+           recurrence == nil,
+           !clearRecurrence,
+           alarmMinutes.isEmpty
         {
             throw AppleCalError.validation("No update fields were provided.")
         }
@@ -650,8 +654,8 @@ struct EventsUpdateCommand: ParsableCommand {
             scope: scopeValue,
             input: EventUpdateInput(
                 title: title,
-                start: try start.map { try DateCodec.parse($0, defaultTimeZone: timezoneObject) },
-                end: try end.map { try DateCodec.parse($0, defaultTimeZone: timezoneObject) },
+                start: start.map { try DateCodec.parse($0, defaultTimeZone: timezoneObject) },
+                end: end.map { try DateCodec.parse($0, defaultTimeZone: timezoneObject) },
                 timezone: timezone != nil ? timezoneObject : nil,
                 allDay: allDay,
                 location: location,
@@ -670,7 +674,7 @@ struct EventsUpdateCommand: ParsableCommand {
                 ("title", event.title),
                 ("start", event.start),
                 ("end", event.end),
-                ("revision", String(event.revision)),
+                ("revision", String(event.revision))
             ])
         }
     }
@@ -704,7 +708,7 @@ struct EventsDeleteCommand: ParsableCommand {
         let payload = try CLI.store.deleteEvent(
             id: id,
             input: EventDeleteInput(
-                occurrenceStart: try occurrenceStart.map { try DateCodec.parse($0) },
+                occurrenceStart: occurrenceStart.map { try DateCodec.parse($0) },
                 scope: scopeValue,
                 expectedRevision: expectedRevision
             )
@@ -723,7 +727,7 @@ struct CompletionCommand: ParsableCommand {
         subcommands: [
             CompletionBashCommand.self,
             CompletionZshCommand.self,
-            CompletionFishCommand.self,
+            CompletionFishCommand.self
         ]
     )
 
@@ -733,7 +737,10 @@ struct CompletionCommand: ParsableCommand {
 }
 
 struct CompletionBashCommand: ParsableCommand {
-    static let configuration = CommandConfiguration(commandName: "bash", abstract: "Generate completion script for Bash.")
+    static let configuration = CommandConfiguration(
+        commandName: "bash",
+        abstract: "Generate completion script for Bash."
+    )
 
     mutating func run() throws {
         Swift.print(AppleCal.completionScript(for: .bash))
@@ -749,7 +756,10 @@ struct CompletionZshCommand: ParsableCommand {
 }
 
 struct CompletionFishCommand: ParsableCommand {
-    static let configuration = CommandConfiguration(commandName: "fish", abstract: "Generate completion script for Fish.")
+    static let configuration = CommandConfiguration(
+        commandName: "fish",
+        abstract: "Generate completion script for Fish."
+    )
 
     mutating func run() throws {
         Swift.print(AppleCal.completionScript(for: .fish))
@@ -789,11 +799,11 @@ struct SchemaCommand: ParsableCommand {
                 CommandSpec(name: "events update", summary: "Update event"),
                 CommandSpec(name: "events delete", summary: "Delete event"),
                 CommandSpec(name: "completion bash|zsh|fish", summary: "Generate shell completion"),
-                CommandSpec(name: "schema", summary: "Print schema contract"),
+                CommandSpec(name: "schema", summary: "Print schema contract")
             ]
         )
 
         let envelope = AppleCalEnvelope<SchemaPayload>.success(payload, command: "schema")
-        Swift.print(try OutputPrinter.renderJSON(envelope, pretty: true))
+        try Swift.print(OutputPrinter.renderJSON(envelope, pretty: true))
     }
 }
