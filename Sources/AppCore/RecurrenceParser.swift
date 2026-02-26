@@ -120,7 +120,7 @@ public enum RecurrenceParser {
                     "TH": .thu,
                     "FR": .fri,
                     "SA": .sat,
-                    "SU": .sun,
+                    "SU": .sun
                 ]
                 byDay = try val.split(separator: ",").map { token in
                     let key = String(token)

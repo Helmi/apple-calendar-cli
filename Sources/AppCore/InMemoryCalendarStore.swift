@@ -9,7 +9,7 @@ public final class InMemoryCalendarStore: CalendarStore, @unchecked Sendable {
     public init(
         calendars: [CalendarRecord] = [
             CalendarRecord(id: "cal-default", title: "Default", source: "Local", colorHex: "#3478F6", writable: true),
-            CalendarRecord(id: "cal-work", title: "Work", source: "iCloud", colorHex: "#34C759", writable: true),
+            CalendarRecord(id: "cal-work", title: "Work", source: "iCloud", colorHex: "#34C759", writable: true)
         ],
         events: [EventRecord] = []
     ) {
@@ -39,7 +39,9 @@ public final class InMemoryCalendarStore: CalendarStore, @unchecked Sendable {
 
         for (chunkStart, chunkEnd) in chunks {
             let subset = eventsByID.values.filter { event in
-                guard let eventStart = try? DateCodec.parse(event.start), let eventEnd = try? DateCodec.parse(event.end) else {
+                guard let eventStart = try? DateCodec.parse(event.start),
+                      let eventEnd = try? DateCodec.parse(event.end)
+                else {
                     return false
                 }
                 if !calendarIDs.isEmpty, !calendarIDs.contains(event.calendarId) {
@@ -66,7 +68,12 @@ public final class InMemoryCalendarStore: CalendarStore, @unchecked Sendable {
         throw AppleCalError.notFound("Event not found.", details: ["id": id ?? "", "externalId": externalID ?? ""])
     }
 
-    public func searchEvents(query: String, from start: Date, to end: Date, calendarIDs: Set<String>) throws -> [EventRecord] {
+    public func searchEvents(
+        query: String,
+        from start: Date,
+        to end: Date,
+        calendarIDs: Set<String>
+    ) throws -> [EventRecord] {
         let base = try listEvents(from: start, to: end, calendarIDs: calendarIDs)
         let needle = query.lowercased()
         return base.filter { event in
@@ -108,7 +115,12 @@ public final class InMemoryCalendarStore: CalendarStore, @unchecked Sendable {
         return event
     }
 
-    public func updateEvent(id: String, occurrenceStart: Date?, scope: EventDeleteScope, input: EventUpdateInput) throws -> EventRecord {
+    public func updateEvent(
+        id: String,
+        occurrenceStart: Date?,
+        scope: EventDeleteScope,
+        input: EventUpdateInput
+    ) throws -> EventRecord {
         guard var event = eventsByID[id] else {
             throw AppleCalError.notFound("Event '\(id)' was not found.")
         }
@@ -169,7 +181,9 @@ public final class InMemoryCalendarStore: CalendarStore, @unchecked Sendable {
             }
         }
 
-        guard let parsedStart = try? DateCodec.parse(event.start), let parsedEnd = try? DateCodec.parse(event.end), parsedEnd > parsedStart else {
+        guard let parsedStart = try? DateCodec.parse(event.start), let parsedEnd = try? DateCodec.parse(event.end),
+              parsedEnd > parsedStart
+        else {
             throw AppleCalError.validation("Updated event time range is invalid.")
         }
 
@@ -199,7 +213,7 @@ public final class InMemoryCalendarStore: CalendarStore, @unchecked Sendable {
         return [
             "id": id,
             "scope": input.scope.rawValue,
-            "status": "deleted",
+            "status": "deleted"
         ]
     }
 }

@@ -27,7 +27,7 @@ public enum AuthResetGuidance {
             "Quit terminals and agents currently using applecal.",
             "Reset Calendar privacy permissions with: tccutil reset Calendar \(bundleIdentifier)",
             "Re-run `applecal auth grant` and approve access when prompted.",
-            "Validate with `applecal auth status --format json`.",
+            "Validate with `applecal auth status --format json`."
         ]
     }
 }

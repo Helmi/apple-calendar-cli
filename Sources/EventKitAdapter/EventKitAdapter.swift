@@ -197,7 +197,10 @@ public final class EventKitCalendarStore: CalendarStore, @unchecked Sendable {
             }
 
             guard let externalID else {
-                throw AppleCalError.notFound("Event not found.", details: ["id": id ?? "", "externalId": externalID ?? ""])
+                throw AppleCalError.notFound(
+                    "Event not found.",
+                    details: ["id": id ?? "", "externalId": externalID ?? ""]
+                )
             }
 
             let now = Date()
@@ -212,7 +215,12 @@ public final class EventKitCalendarStore: CalendarStore, @unchecked Sendable {
         }
     }
 
-    public func searchEvents(query: String, from start: Date, to end: Date, calendarIDs: Set<String>) throws -> [EventRecord] {
+    public func searchEvents(
+        query: String,
+        from start: Date,
+        to end: Date,
+        calendarIDs: Set<String>
+    ) throws -> [EventRecord] {
         let events = try listEvents(from: start, to: end, calendarIDs: calendarIDs)
         let needle = query.lowercased()
         return events.filter { event in
@@ -256,7 +264,12 @@ public final class EventKitCalendarStore: CalendarStore, @unchecked Sendable {
         }
     }
 
-    public func updateEvent(id: String, occurrenceStart: Date?, scope: EventDeleteScope, input: EventUpdateInput) throws -> EventRecord {
+    public func updateEvent(
+        id: String,
+        occurrenceStart: Date?,
+        scope: EventDeleteScope,
+        input: EventUpdateInput
+    ) throws -> EventRecord {
         try queue.sync {
             try ensureWriteAccess()
 
@@ -395,7 +408,8 @@ public final class EventKitCalendarStore: CalendarStore, @unchecked Sendable {
                 interval: Int(rule.interval),
                 byDay: byDay,
                 until: rule.recurrenceEnd?.endDate.map(DateCodec.iso8601String(from:)),
-                count: Int(rule.recurrenceEnd?.occurrenceCount ?? 0) == 0 ? nil : Int(rule.recurrenceEnd?.occurrenceCount ?? 0),
+                count: Int(rule.recurrenceEnd?.occurrenceCount ?? 0) == 0 ? nil :
+                    Int(rule.recurrenceEnd?.occurrenceCount ?? 0),
                 rrule: nil
             )
         }

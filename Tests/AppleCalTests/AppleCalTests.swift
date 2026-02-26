@@ -1,10 +1,10 @@
-import Darwin
-import XCTest
 @testable import App
 @testable import AppCore
+import Darwin
 @testable import Diagnostics
 @testable import EventKitAdapter
 @testable import Formatting
+import XCTest
 
 final class AppleCalTests: XCTestCase {
     func testMachineCodeMapsToExpectedExitCode() {
@@ -40,7 +40,8 @@ final class AppleCalTests: XCTestCase {
     }
 
     func testAdvancedRRuleParser() throws {
-        let recurrence = try RecurrenceParser.parse(flags: RecurrenceFlags(rrule: "FREQ=WEEKLY;INTERVAL=1;BYDAY=MO,FR;COUNT=3"))
+        let recurrence = try RecurrenceParser
+            .parse(flags: RecurrenceFlags(rrule: "FREQ=WEEKLY;INTERVAL=1;BYDAY=MO,FR;COUNT=3"))
         XCTAssertEqual(recurrence?.frequency, .weekly)
         XCTAssertEqual(recurrence?.byDay, [.mon, .fri])
         XCTAssertEqual(recurrence?.count, 3)
@@ -67,7 +68,7 @@ final class AppleCalTests: XCTestCase {
             title: "Standup",
             start: start,
             end: end,
-            timezone: TimeZone(identifier: "Europe/Berlin")!,
+            timezone: XCTUnwrap(TimeZone(identifier: "Europe/Berlin")),
             allDay: false,
             location: "Zoom",
             notes: "Daily sync",
@@ -81,12 +82,12 @@ final class AppleCalTests: XCTestCase {
 
         let updated = try store.updateEvent(
             id: created.id,
-            occurrenceStart: try DateCodec.parse("2026-03-09T09:00:00+01:00"),
+            occurrenceStart: DateCodec.parse("2026-03-09T09:00:00+01:00"),
             scope: .this,
             input: EventUpdateInput(
                 title: "Standup (moved)",
-                start: try DateCodec.parse("2026-03-09T10:00:00+01:00"),
-                end: try DateCodec.parse("2026-03-09T10:30:00+01:00"),
+                start: DateCodec.parse("2026-03-09T10:00:00+01:00"),
+                end: DateCodec.parse("2026-03-09T10:30:00+01:00"),
                 expectedRevision: created.revision
             )
         )
@@ -96,7 +97,7 @@ final class AppleCalTests: XCTestCase {
         XCTAssertNotNil(updated.occurrenceStart)
 
         let deletePayload = try store.deleteEvent(id: created.id, input: EventDeleteInput(
-            occurrenceStart: try DateCodec.parse("2026-03-09T10:00:00+01:00"),
+            occurrenceStart: DateCodec.parse("2026-03-09T10:00:00+01:00"),
             scope: .future,
             expectedRevision: updated.revision
         ))
@@ -110,8 +111,8 @@ final class AppleCalTests: XCTestCase {
         let created = try store.createEvent(input: EventCreateInput(
             calendarId: "cal-default",
             title: "Conflict check",
-            start: try DateCodec.parse("2026-02-24T10:00:00+01:00"),
-            end: try DateCodec.parse("2026-02-24T11:00:00+01:00"),
+            start: DateCodec.parse("2026-02-24T10:00:00+01:00"),
+            end: DateCodec.parse("2026-02-24T11:00:00+01:00"),
             timezone: .current,
             allDay: false
         ))
@@ -169,7 +170,7 @@ final class AppleCalTests: XCTestCase {
             "calendars",
             "events",
             "completion",
-            "schema",
+            "schema"
         ]
 
         for fragment in expectedFragments {
