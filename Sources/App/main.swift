@@ -7,10 +7,10 @@ import Formatting
 import Foundation
 
 @main
-struct AppleCal: ParsableCommand {
+struct ACal: ParsableCommand {
     static let configuration = CommandConfiguration(
-        commandName: "applecal",
-        abstract: "A CLI for working with Apple Calendar.",
+        commandName: "acal",
+        abstract: "A CLI for working with macOS Calendar.",
         discussion: """
         Start with one of the top-level command groups:
           - doctor
@@ -20,7 +20,7 @@ struct AppleCal: ParsableCommand {
           - completion
           - schema
 
-        Use `applecal <command> --help` for details and examples.
+        Use `acal <command> --help` for details and examples.
         """,
         subcommands: [
             DoctorCommand.self,
@@ -36,13 +36,13 @@ struct AppleCal: ParsableCommand {
         do {
             var command = try parseAsRoot()
             try command.run()
-        } catch let appleCalError as AppleCalError {
+        } catch let appleCalError as ACalError {
             writeToStandardError("Error [\(appleCalError.code.rawValue)]: \(appleCalError.message.text)")
             Darwin.exit(appleCalError.exitCode.rawValue)
         } catch {
             if exitCode(for: error) == .validationFailure {
                 writeToStandardError(message(for: error))
-                Darwin.exit(AppleCalProcessExitCode.invalidUsage.rawValue)
+                Darwin.exit(ACalProcessExitCode.invalidUsage.rawValue)
             }
 
             exit(withError: error)
@@ -70,7 +70,7 @@ struct GlobalOutputOptions: ParsableArguments {
         case json
         case table
 
-        var appCoreValue: AppleCalOutputFormat {
+        var appCoreValue: ACalOutputFormat {
             switch self {
             case .json: .json
             case .table: .table
@@ -84,7 +84,7 @@ struct GlobalOutputOptions: ParsableArguments {
     @Option(name: .long, help: "Pretty-print JSON output (true/false).")
     var pretty: Bool = true
 
-    var resolvedFormat: AppleCalOutputFormat {
+    var resolvedFormat: ACalOutputFormat {
         if let format {
             return format.appCoreValue
         }
@@ -95,7 +95,7 @@ struct GlobalOutputOptions: ParsableArguments {
 
 enum CLI {
     static let store: any CalendarStore = {
-        let mode = ProcessInfo.processInfo.environment["APPLECAL_STORE"]?.lowercased()
+        let mode = ProcessInfo.processInfo.environment["ACAL_STORE"]?.lowercased()
         if mode == "in_memory" {
             return InMemoryCalendarStore.shared
         }
@@ -110,7 +110,7 @@ enum CLI {
     ) throws {
         switch options.resolvedFormat {
         case .json:
-            let payload = AppleCalEnvelope<T>.success(data, command: command)
+            let payload = ACalEnvelope<T>.success(data, command: command)
             try Swift.print(OutputPrinter.renderJSON(payload, pretty: options.pretty))
         case .table:
             Swift.print(tableRenderer())
@@ -123,7 +123,7 @@ enum CLI {
         }
 
         guard let timezone = TimeZone(identifier: value) else {
-            throw AppleCalError.validation("Unknown timezone '\(value)'.")
+            throw ACalError.validation("Unknown timezone '\(value)'.")
         }
         return timezone
     }
@@ -155,7 +155,7 @@ enum CLI {
     ) throws -> RecurrenceFlags {
         let frequency = repeatFrequency.flatMap { RecurrenceFrequency(rawValue: $0.lowercased()) }
         if let repeatFrequency, frequency == nil {
-            throw AppleCalError.validation("Invalid --repeat value '\(repeatFrequency)'.")
+            throw ACalError.validation("Invalid --repeat value '\(repeatFrequency)'.")
         }
 
         return RecurrenceFlags(
@@ -219,7 +219,7 @@ struct AuthStatusCommand: ParsableCommand {
     @OptionGroup var output: GlobalOutputOptions
 
     struct Payload: Codable, Sendable {
-        let authorization: AppleCalAuthorizationState
+        let authorization: ACalAuthorizationState
         let writable: Bool
     }
 
@@ -245,7 +245,7 @@ struct AuthGrantCommand: ParsableCommand {
     @OptionGroup var output: GlobalOutputOptions
 
     struct Payload: Codable, Sendable {
-        let authorization: AppleCalAuthorizationState
+        let authorization: ACalAuthorizationState
         let granted: Bool
     }
 
@@ -335,7 +335,7 @@ struct CalendarsGetCommand: ParsableCommand {
 
     mutating func run() throws {
         guard id != nil || name != nil else {
-            throw AppleCalError.validation("Provide --id or --name.")
+            throw ACalError.validation("Provide --id or --name.")
         }
 
         let calendar = try CLI.store.getCalendar(id: id, name: name)
@@ -418,7 +418,7 @@ struct EventsGetCommand: ParsableCommand {
 
     mutating func run() throws {
         guard id != nil || externalId != nil else {
-            throw AppleCalError.validation("Provide --id or --external-id.")
+            throw ACalError.validation("Provide --id or --external-id.")
         }
 
         let event = try CLI.store.getEvent(id: id, externalID: externalId)
@@ -625,7 +625,7 @@ struct EventsUpdateCommand: ParsableCommand {
         let timezoneObject = try CLI.parseTimezone(timezone)
         let scopeValue = EventDeleteScope(rawValue: scope.lowercased())
         guard let scopeValue else {
-            throw AppleCalError.validation("Invalid --scope value '\(scope)'. Use this|future|all.")
+            throw ACalError.validation("Invalid --scope value '\(scope)'. Use this|future|all.")
         }
 
         let recurrence = try RecurrenceParser.parse(flags: CLI.recurrenceFlags(
@@ -643,7 +643,7 @@ struct EventsUpdateCommand: ParsableCommand {
            !clearRecurrence,
            alarmMinutes.isEmpty
         {
-            throw AppleCalError.validation("No update fields were provided.")
+            throw ACalError.validation("No update fields were provided.")
         }
 
         let occurrence = try occurrenceStart.map { try DateCodec.parse($0) }
@@ -702,7 +702,7 @@ struct EventsDeleteCommand: ParsableCommand {
 
     mutating func run() throws {
         guard let scopeValue = EventDeleteScope(rawValue: scope.lowercased()) else {
-            throw AppleCalError.validation("Invalid --scope value '\(scope)'. Use this|future|all.")
+            throw ACalError.validation("Invalid --scope value '\(scope)'. Use this|future|all.")
         }
 
         let payload = try CLI.store.deleteEvent(
@@ -743,7 +743,7 @@ struct CompletionBashCommand: ParsableCommand {
     )
 
     mutating func run() throws {
-        Swift.print(AppleCal.completionScript(for: .bash))
+        Swift.print(ACal.completionScript(for: .bash))
     }
 }
 
@@ -751,7 +751,7 @@ struct CompletionZshCommand: ParsableCommand {
     static let configuration = CommandConfiguration(commandName: "zsh", abstract: "Generate completion script for Zsh.")
 
     mutating func run() throws {
-        Swift.print(AppleCal.completionScript(for: .zsh))
+        Swift.print(ACal.completionScript(for: .zsh))
     }
 }
 
@@ -762,7 +762,7 @@ struct CompletionFishCommand: ParsableCommand {
     )
 
     mutating func run() throws {
-        Swift.print(AppleCal.completionScript(for: .fish))
+        Swift.print(ACal.completionScript(for: .fish))
     }
 }
 
@@ -784,7 +784,7 @@ struct SchemaCommand: ParsableCommand {
 
     mutating func run() throws {
         let payload = SchemaPayload(
-            schemaVersion: AppleCalSchema.version,
+            schemaVersion: ACalSchema.version,
             commands: [
                 CommandSpec(name: "doctor", summary: "Run diagnostics"),
                 CommandSpec(name: "auth status", summary: "Show authorization status"),
@@ -803,7 +803,7 @@ struct SchemaCommand: ParsableCommand {
             ]
         )
 
-        let envelope = AppleCalEnvelope<SchemaPayload>.success(payload, command: "schema")
+        let envelope = ACalEnvelope<SchemaPayload>.success(payload, command: "schema")
         try Swift.print(OutputPrinter.renderJSON(envelope, pretty: true))
     }
 }

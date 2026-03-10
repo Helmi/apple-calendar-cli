@@ -15,9 +15,9 @@ Example:
   render-homebrew-formula.sh \
     --version 0.1.0 \
     --sha256 abc123... \
-    --repo helmi/apple-calendar-cli \
-    --asset-base applecal-0.1.0-macos-universal \
-    --output /tmp/Formula/applecal.rb
+    --repo helmi/acal-cli \
+    --asset-base acal-0.1.0-macos-universal \
+    --output /tmp/Formula/acal.rb
 EOF
 }
 
@@ -25,7 +25,7 @@ VERSION=""
 SHA256=""
 REPO=""
 ASSET_BASE=""
-OUTPUT="Formula/applecal.rb"
+OUTPUT="Formula/acal.rb"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -71,7 +71,7 @@ VERSION="${VERSION#v}"
 TAG="v${VERSION}"
 
 if [[ -z "$ASSET_BASE" ]]; then
-  ASSET_BASE="applecal-${VERSION}-macos-universal"
+  ASSET_BASE="acal-${VERSION}-macos-universal"
 fi
 
 ASSET_URL="https://github.com/${REPO}/releases/download/${TAG}/${ASSET_BASE}.zip"
@@ -79,8 +79,8 @@ ASSET_URL="https://github.com/${REPO}/releases/download/${TAG}/${ASSET_BASE}.zip
 mkdir -p "$(dirname "$OUTPUT")"
 
 cat > "$OUTPUT" <<EOF
-class Applecal < Formula
-  desc "Fast, EventKit-native Apple Calendar CLI for macOS"
+class Acal < Formula
+  desc "Fast, EventKit-native A Calendar CLI for macOS"
   homepage "https://github.com/${REPO}"
   version "${VERSION}"
   url "${ASSET_URL}"
@@ -88,14 +88,14 @@ class Applecal < Formula
   license "MIT"
 
   def install
-    binary = Dir["**/applecal"].find { |path| File.file?(path) }
-    odie "applecal binary not found in release archive" if binary.nil?
+    binary = Dir["**/acal"].find { |path| File.file?(path) }
+    odie "acal binary not found in release archive" if binary.nil?
 
-    bin.install binary => "applecal"
+    bin.install binary => "acal"
   end
 
   test do
-    assert_match "schemaVersion", shell_output("#{bin}/applecal schema --format json")
+    assert_match "schemaVersion", shell_output("#{bin}/acal schema --format json")
   end
 end
 EOF

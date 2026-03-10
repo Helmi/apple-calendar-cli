@@ -1,6 +1,6 @@
-# Contributing to applecal
+# Contributing to acal
 
-Thanks for helping improve `applecal`.
+Thanks for helping improve `acal`.
 
 This repository is built for both human contributors and agent workflows, so we optimize for traceability, small changes, and deterministic behavior.
 

@@ -21,7 +21,7 @@ public enum DateCodec {
     public static func parse(_ value: String, defaultTimeZone: TimeZone = .current) throws -> Date {
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
-            throw AppleCalError.validation("Date/time cannot be empty.")
+            throw ACalError.validation("Date/time cannot be empty.")
         }
 
         let fractional = makeISO8601Formatter(fractionalSeconds: true)
@@ -44,12 +44,12 @@ public enum DateCodec {
                 minute: 0,
                 second: 0
             )) else {
-                throw AppleCalError.validation("Could not convert date '\(value)' to the configured timezone.")
+                throw ACalError.validation("Could not convert date '\(value)' to the configured timezone.")
             }
             return converted
         }
 
-        throw AppleCalError.validation(
+        throw ACalError.validation(
             "Unsupported date format '\(value)'. Use ISO-8601 date-time or YYYY-MM-DD."
         )
     }

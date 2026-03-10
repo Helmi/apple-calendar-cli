@@ -30,7 +30,7 @@ public final class InMemoryCalendarStore: CalendarStore, @unchecked Sendable {
             return calendar
         }
 
-        throw AppleCalError.notFound("Calendar not found.", details: ["id": id ?? "", "name": name ?? ""])
+        throw ACalError.notFound("Calendar not found.", details: ["id": id ?? "", "name": name ?? ""])
     }
 
     public func listEvents(from start: Date, to end: Date, calendarIDs: Set<String>) throws -> [EventRecord] {
@@ -65,7 +65,7 @@ public final class InMemoryCalendarStore: CalendarStore, @unchecked Sendable {
             return event
         }
 
-        throw AppleCalError.notFound("Event not found.", details: ["id": id ?? "", "externalId": externalID ?? ""])
+        throw ACalError.notFound("Event not found.", details: ["id": id ?? "", "externalId": externalID ?? ""])
     }
 
     public func searchEvents(
@@ -85,10 +85,10 @@ public final class InMemoryCalendarStore: CalendarStore, @unchecked Sendable {
 
     public func createEvent(input: EventCreateInput) throws -> EventRecord {
         guard calendars.contains(where: { $0.id == input.calendarId }) else {
-            throw AppleCalError.notFound("Calendar '\(input.calendarId)' does not exist.")
+            throw ACalError.notFound("Calendar '\(input.calendarId)' does not exist.")
         }
         guard input.end > input.start else {
-            throw AppleCalError.validation("Event end must be after start.")
+            throw ACalError.validation("Event end must be after start.")
         }
 
         let id = "evt-\(UUID().uuidString.lowercased())"
@@ -122,11 +122,11 @@ public final class InMemoryCalendarStore: CalendarStore, @unchecked Sendable {
         input: EventUpdateInput
     ) throws -> EventRecord {
         guard var event = eventsByID[id] else {
-            throw AppleCalError.notFound("Event '\(id)' was not found.")
+            throw ACalError.notFound("Event '\(id)' was not found.")
         }
 
         if let expectedRevision = input.expectedRevision, expectedRevision != event.revision {
-            throw AppleCalError.conflict(
+            throw ACalError.conflict(
                 "Event revision mismatch.",
                 details: ["expected": String(expectedRevision), "current": String(event.revision)]
             )
@@ -184,7 +184,7 @@ public final class InMemoryCalendarStore: CalendarStore, @unchecked Sendable {
         guard let parsedStart = try? DateCodec.parse(event.start), let parsedEnd = try? DateCodec.parse(event.end),
               parsedEnd > parsedStart
         else {
-            throw AppleCalError.validation("Updated event time range is invalid.")
+            throw ACalError.validation("Updated event time range is invalid.")
         }
 
         event.revision += 1
@@ -194,18 +194,18 @@ public final class InMemoryCalendarStore: CalendarStore, @unchecked Sendable {
 
     public func deleteEvent(id: String, input: EventDeleteInput) throws -> [String: String] {
         guard let event = eventsByID[id] else {
-            throw AppleCalError.notFound("Event '\(id)' was not found.")
+            throw ACalError.notFound("Event '\(id)' was not found.")
         }
 
         if let expectedRevision = input.expectedRevision, expectedRevision != event.revision {
-            throw AppleCalError.conflict(
+            throw ACalError.conflict(
                 "Event revision mismatch.",
                 details: ["expected": String(expectedRevision), "current": String(event.revision)]
             )
         }
 
         if input.scope != .all, input.occurrenceStart == nil {
-            throw AppleCalError.validation("--occurrence-start is required when scope is this or future.")
+            throw ACalError.validation("--occurrence-start is required when scope is this or future.")
         }
 
         eventsByID.removeValue(forKey: id)

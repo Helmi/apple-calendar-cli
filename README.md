@@ -1,11 +1,11 @@
 <div align="center">
 
-# Apple Calendar CLI
+# A Calendar CLI
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 
-🗓️ EventKit-native Apple Calendar CLI for macOS.  
-CLI binary name: `applecal`.
+🗓️ EventKit-native A Calendar CLI for macOS.  
+CLI binary name: `acal`.
 
 </div>
 
@@ -15,40 +15,40 @@ CLI binary name: `applecal`.
 
 ```bash
 brew tap Helmi/homebrew-tap
-brew install applecal
+brew install acal
 ```
 
 ### ⬇️ Direct binary download
 
-Download the latest `applecal-<version>-macos-universal.zip` from Releases:
+Download the latest `acal-<version>-macos-universal.zip` from Releases:
 
-- https://github.com/Helmi/apple-calendar-cli/releases
+- https://github.com/Helmi/acal-cli/releases
 
 Install manually:
 
 ```bash
-curl -L -o applecal.zip \
-  https://github.com/Helmi/apple-calendar-cli/releases/download/v0.1.0/applecal-0.1.0-macos-universal.zip
-unzip applecal.zip
-chmod +x applecal
-mv applecal /opt/homebrew/bin/applecal
+curl -L -o acal.zip \
+  https://github.com/Helmi/acal-cli/releases/download/v0.1.0/acal-0.1.0-macos-universal.zip
+unzip acal.zip
+chmod +x acal
+mv acal /opt/homebrew/bin/acal
 ```
 
 ## ⚡ Quick start
 
 ```bash
 # Health + permission state
-applecal doctor --format json
-applecal auth status --format json
+acal doctor --format json
+acal auth status --format json
 
 # If needed, request full calendar access
-applecal auth grant --format json
+acal auth grant --format json
 
 # List calendars
-applecal calendars list --format json
+acal calendars list --format json
 
 # Create an event
-applecal events create \
+acal events create \
   --calendar "Work" \
   --title "Team Standup" \
   --start "2026-03-02T09:00:00+01:00" \
@@ -67,17 +67,17 @@ applecal events create \
 
 ## 🔖 Versioning
 
-Apple Calendar CLI follows SemVer (`MAJOR.MINOR.PATCH`).
+A Calendar CLI follows SemVer (`MAJOR.MINOR.PATCH`).
 
 - Product release example: `0.1.0`
-- CLI binary: `applecal`
+- CLI binary: `acal`
 - JSON schema version is tracked separately for machine contract stability.
 
 ## 🛠️ Build from source
 
 ```bash
-git clone https://github.com/Helmi/apple-calendar-cli.git
-cd apple-calendar-cli
+git clone https://github.com/Helmi/acal-cli.git
+cd acal-cli
 swift build -c release
 swift test
 ```

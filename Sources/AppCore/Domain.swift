@@ -1,6 +1,6 @@
 import Foundation
 
-public enum AppleCalAuthorizationState: String, Codable, Sendable, CaseIterable {
+public enum ACalAuthorizationState: String, Codable, Sendable, CaseIterable {
     case notDetermined = "not_determined"
     case denied
     case restricted

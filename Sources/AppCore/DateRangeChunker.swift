@@ -5,7 +5,7 @@ public enum DateRangeChunker {
 
     public static func chunkedRanges(from start: Date, to end: Date) throws -> [(Date, Date)] {
         guard start < end else {
-            throw AppleCalError.validation("--from must be earlier than --to.")
+            throw ACalError.validation("--from must be earlier than --to.")
         }
 
         var ranges: [(Date, Date)] = []

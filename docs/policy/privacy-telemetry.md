@@ -1,6 +1,6 @@
 # Privacy and Telemetry Stance
 
-applecal defaults to local-only operation.
+acal defaults to local-only operation.
 
 ## Commitments
 

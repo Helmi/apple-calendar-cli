@@ -9,7 +9,7 @@ public enum OutputPrinter {
         }
         let data = try encoder.encode(value)
         guard let string = String(data: data, encoding: .utf8) else {
-            throw AppleCalError(code: .internalError, message: "Failed to encode JSON output.")
+            throw ACalError(code: .internalError, message: "Failed to encode JSON output.")
         }
         return string
     }

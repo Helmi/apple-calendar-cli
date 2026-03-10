@@ -6,18 +6,18 @@ import Darwin
 @testable import Formatting
 import XCTest
 
-final class AppleCalTests: XCTestCase {
+final class ACalTests: XCTestCase {
     func testMachineCodeMapsToExpectedExitCode() {
-        XCTAssertEqual(AppleCalMachineErrorCode.invalidArguments.mappedExitCode, .invalidUsage)
-        XCTAssertEqual(AppleCalMachineErrorCode.permissionDenied.mappedExitCode, .permissionDenied)
-        XCTAssertEqual(AppleCalMachineErrorCode.notFound.mappedExitCode, .notFound)
-        XCTAssertEqual(AppleCalMachineErrorCode.validationFailed.mappedExitCode, .conflictOrValidationFailure)
-        XCTAssertEqual(AppleCalMachineErrorCode.eventKitFailure.mappedExitCode, .eventKitFailure)
+        XCTAssertEqual(ACalMachineErrorCode.invalidArguments.mappedExitCode, .invalidUsage)
+        XCTAssertEqual(ACalMachineErrorCode.permissionDenied.mappedExitCode, .permissionDenied)
+        XCTAssertEqual(ACalMachineErrorCode.notFound.mappedExitCode, .notFound)
+        XCTAssertEqual(ACalMachineErrorCode.validationFailed.mappedExitCode, .conflictOrValidationFailure)
+        XCTAssertEqual(ACalMachineErrorCode.eventKitFailure.mappedExitCode, .eventKitFailure)
     }
 
     func testEnvelopeIncludesSchemaVersion() throws {
         let payload = ["result": "ok"]
-        let envelope = AppleCalEnvelope.success(payload, command: "test")
+        let envelope = ACalEnvelope.success(payload, command: "test")
         let json = try OutputPrinter.renderJSON(envelope, pretty: false)
         XCTAssertTrue(json.contains("\"schemaVersion\":\"1.0.0\""))
         XCTAssertTrue(json.contains("\"ok\":true"))
@@ -123,47 +123,47 @@ final class AppleCalTests: XCTestCase {
             scope: .all,
             input: EventUpdateInput(title: "New", expectedRevision: created.revision + 10)
         )) { error in
-            guard let appleError = error as? AppleCalError else {
-                return XCTFail("Expected AppleCalError")
+            guard let appleError = error as? ACalError else {
+                return XCTFail("Expected ACalError")
             }
             XCTAssertEqual(appleError.code, .conflict)
         }
     }
 
     func testPermissionScenariosViaEnvironmentOverrides() {
-        withEnv("APPLECAL_AUTH_STATE", value: "not_determined") {
+        withEnv("ACAL_AUTH_STATE", value: "not_determined") {
             XCTAssertEqual(EventKitAdapter.currentAuthorizationState(), .notDetermined)
         }
 
-        withEnv("APPLECAL_AUTH_STATE", value: "denied") {
+        withEnv("ACAL_AUTH_STATE", value: "denied") {
             XCTAssertEqual(EventKitAdapter.currentAuthorizationState(), .denied)
         }
 
-        withEnv("APPLECAL_AUTH_STATE", value: "full_access") {
+        withEnv("ACAL_AUTH_STATE", value: "full_access") {
             XCTAssertEqual(EventKitAdapter.currentAuthorizationState(), .fullAccess)
         }
     }
 
     func testGrantFlowCanBeSimulatedForIntegrationTests() throws {
-        try withThrowingEnv("APPLECAL_AUTH_GRANT_RESULT", value: "denied") {
+        try withThrowingEnv("ACAL_AUTH_GRANT_RESULT", value: "denied") {
             XCTAssertEqual(try EventKitAdapter.requestFullAccess(), .denied)
         }
 
-        try withThrowingEnv("APPLECAL_AUTH_GRANT_RESULT", value: "full_access") {
+        try withThrowingEnv("ACAL_AUTH_GRANT_RESULT", value: "full_access") {
             XCTAssertEqual(try EventKitAdapter.requestFullAccess(), .fullAccess)
         }
     }
 
     func testHelpSnapshotContainsCommandTree() {
-        let help = AppleCal.helpMessage()
+        let help = ACal.helpMessage()
         let normalized = help
             .split(separator: "\n")
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }
 
         let expectedFragments = [
-            "OVERVIEW: A CLI for working with Apple Calendar.",
-            "USAGE: applecal <subcommand>",
+            "OVERVIEW: A CLI for working with macOS Calendar.",
+            "USAGE: acal <subcommand>",
             "SUBCOMMANDS:",
             "doctor",
             "auth",
@@ -179,7 +179,7 @@ final class AppleCalTests: XCTestCase {
     }
 
     func testDoctorReportContainsAuthState() {
-        withEnv("APPLECAL_AUTH_STATE", value: "restricted") {
+        withEnv("ACAL_AUTH_STATE", value: "restricted") {
             let report = DoctorReport()
             XCTAssertEqual(report.authorization, .restricted)
             XCTAssertTrue(report.eventKitAvailable)
