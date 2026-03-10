@@ -1,87 +1,125 @@
 <div align="center">
 
-# A Calendar CLI
+# acal
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 
-🗓️ EventKit-native A Calendar CLI for macOS.  
-CLI binary name: `acal`.
+An Apple Calendar CLI for macOS. Read and write your calendar from the terminal.
 
 </div>
 
-## 🚀 Install
+## What it is
 
-### 🍺 Homebrew (recommended)
+`acal` is a single binary. Install it, grant access once, and any script or agent can read and write your Apple Calendar natively via EventKit — no server process required.
+
+Works with shell scripts, cron jobs, and AI agents — anything that can run a command.
+
+## Install
+
+### Homebrew (recommended)
 
 ```bash
 brew tap Helmi/homebrew-tap
 brew install acal
 ```
 
-### ⬇️ Direct binary download
+### Direct download
 
-Download the latest `acal-<version>-macos-universal.zip` from Releases:
-
-- https://github.com/Helmi/acal-cli/releases
-
-Install manually:
+Download the latest `acal-<version>-macos-universal.zip` from [Releases](https://github.com/Helmi/acal-apple-calendar-cli/releases):
 
 ```bash
 curl -L -o acal.zip \
-  https://github.com/Helmi/acal-cli/releases/download/v0.1.0/acal-0.1.0-macos-universal.zip
+  https://github.com/Helmi/acal-apple-calendar-cli/releases/download/v0.2.0/acal-0.2.0-macos-universal.zip
 unzip acal.zip
 chmod +x acal
 mv acal /opt/homebrew/bin/acal
 ```
 
-## ⚡ Quick start
+## Quick start
 
 ```bash
-# Health + permission state
-acal doctor --format json
-acal auth status --format json
+# Check permissions and EventKit status
+acal doctor
 
-# If needed, request full calendar access
-acal auth grant --format json
+# Grant calendar access (first run)
+acal auth grant
 
-# List calendars
-acal calendars list --format json
+# List your calendars
+acal calendars list
+
+# List upcoming events as JSON
+acal events list --format json
 
 # Create an event
 acal events create \
   --calendar "Work" \
   --title "Team Standup" \
-  --start "2026-03-02T09:00:00+01:00" \
-  --end "2026-03-02T09:30:00+01:00" \
-  --format json
+  --start "2026-03-10T09:00:00+01:00" \
+  --end "2026-03-10T09:30:00+01:00"
 ```
 
-## 🧰 Commands
+## Commands
 
-- `doctor`
-- `auth status|grant|reset`
-- `calendars list|get`
-- `events list|get|search|create|update|delete`
-- `completion bash|zsh|fish`
-- `schema`
+| Command | What it does |
+|---|---|
+| `doctor` | Health check — EventKit access, permission state |
+| `auth status\|grant\|reset` | Manage calendar permissions |
+| `calendars list\|get` | List or inspect calendars |
+| `events list\|get\|search\|create\|update\|delete` | Full event lifecycle, including recurrence-safe edits |
+| `schema` | Print the stable JSON output contract |
+| `completion bash\|zsh\|fish` | Install shell completions |
 
-## 🔖 Versioning
+All commands accept `--format json` for machine-readable output.
 
-A Calendar CLI follows SemVer (`MAJOR.MINOR.PATCH`).
+## For agents and scripts
 
-- Product release example: `0.1.0`
-- CLI binary: `acal`
-- JSON schema version is tracked separately for machine contract stability.
-
-## 🛠️ Build from source
+`acal` is designed to be called by AI agents with bash access. Every response uses the same envelope — `ok`, `data`, `error`, `meta` — so agents can handle success and failure without parsing workarounds.
 
 ```bash
-git clone https://github.com/Helmi/acal-cli.git
-cd acal-cli
+acal events list --format json
+```
+
+```json
+{
+  "ok": true,
+  "data": {
+    "events": [
+      {
+        "id": "abc123",
+        "calendarId": "work-cal-id",
+        "title": "Team Standup",
+        "start": "2026-03-10T09:00:00+01:00",
+        "end": "2026-03-10T09:30:00+01:00",
+        "timezone": "Europe/Berlin",
+        "allDay": false,
+        "recurrence": null,
+        "alarms": []
+      }
+    ]
+  },
+  "meta": {
+    "command": "events list",
+    "schemaVersion": "1.0.0",
+    "timestamp": "2026-03-10T08:00:00Z"
+  }
+}
+```
+
+Full contract: `acal schema`
+
+## Build from source
+
+```bash
+git clone https://github.com/Helmi/acal-apple-calendar-cli.git
+cd acal-apple-calendar-cli
 swift build -c release
 swift test
 ```
 
-## 📄 License
+## Contributing
 
-MIT — see `LICENSE`.
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+## License
+
+MIT — see [LICENSE](./LICENSE).

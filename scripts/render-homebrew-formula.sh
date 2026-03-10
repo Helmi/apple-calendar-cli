@@ -15,7 +15,7 @@ Example:
   render-homebrew-formula.sh \
     --version 0.1.0 \
     --sha256 abc123... \
-    --repo helmi/acal-cli \
+    --repo helmi/acal-apple-calendar-cli \
     --asset-base acal-0.1.0-macos-universal \
     --output /tmp/Formula/acal.rb
 EOF

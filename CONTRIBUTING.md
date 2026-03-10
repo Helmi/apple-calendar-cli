@@ -100,3 +100,11 @@ Before opening a PR:
 - Keep telemetry/privacy behavior aligned with `docs/policy/privacy-telemetry.md`
 
 Thanks for contributing.
+
+## Versioning
+
+`acal` follows SemVer (`MAJOR.MINOR.PATCH`).
+
+- Binary: `acal`
+- JSON schema version is tracked separately from the binary version for machine contract stability — breaking schema changes increment the schema version independently.
+- Pre-1.0: minor bumps may include breaking changes; they will be called out explicitly in release notes.

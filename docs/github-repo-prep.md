@@ -14,7 +14,7 @@ This checklist prepares the repository for publishing **without pushing/uploadin
 
 When you give the go-ahead to publish:
 
-1. Create remote repository (`helmi/acal-cli` or chosen org)
+1. Create remote repository (`helmi/acal-apple-calendar-cli` or chosen org)
 2. Push local history
 3. Configure branch protections
    - require PR review
