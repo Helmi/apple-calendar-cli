@@ -36,9 +36,9 @@ struct ACal: ParsableCommand {
         do {
             var command = try parseAsRoot()
             try command.run()
-        } catch let appleCalError as ACalError {
-            writeToStandardError("Error [\(appleCalError.code.rawValue)]: \(appleCalError.message.text)")
-            Darwin.exit(appleCalError.exitCode.rawValue)
+        } catch let acalError as ACalError {
+            writeToStandardError("Error [\(acalError.code.rawValue)]: \(acalError.message.text)")
+            Darwin.exit(acalError.exitCode.rawValue)
         } catch {
             if exitCode(for: error) == .validationFailure {
                 writeToStandardError(message(for: error))
