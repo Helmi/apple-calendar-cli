@@ -1,6 +1,12 @@
 import Foundation
 
 public enum DateCodec {
+    // Cached formatters — safe for single-threaded CLI use.
+    // nonisolated(unsafe) suppresses Swift 6 concurrency warnings for static lets.
+    nonisolated(unsafe) private static let fractionalFormatter = makeISO8601Formatter(fractionalSeconds: true)
+    nonisolated(unsafe) private static let standardFormatter = makeISO8601Formatter(fractionalSeconds: false)
+    private static let dateOnlyFormatter = makeDateOnlyFormatter()
+
     private static func makeISO8601Formatter(fractionalSeconds: Bool) -> ISO8601DateFormatter {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = fractionalSeconds
@@ -24,15 +30,11 @@ public enum DateCodec {
             throw ACalError.validation("Date/time cannot be empty.")
         }
 
-        let fractional = makeISO8601Formatter(fractionalSeconds: true)
-        let standard = makeISO8601Formatter(fractionalSeconds: false)
-
-        if let parsed = fractional.date(from: trimmed) ?? standard.date(from: trimmed) {
+        if let parsed = fractionalFormatter.date(from: trimmed) ?? standardFormatter.date(from: trimmed) {
             return parsed
         }
 
-        let dateOnly = makeDateOnlyFormatter()
-        if let day = dateOnly.date(from: trimmed) {
+        if let day = dateOnlyFormatter.date(from: trimmed) {
             let calendar = Calendar(identifier: .gregorian)
             let components = calendar.dateComponents(in: defaultTimeZone, from: day)
             guard let converted = calendar.date(from: DateComponents(
@@ -55,6 +57,6 @@ public enum DateCodec {
     }
 
     public static func iso8601String(from date: Date) -> String {
-        makeISO8601Formatter(fractionalSeconds: false).string(from: date)
+        standardFormatter.string(from: date)
     }
 }

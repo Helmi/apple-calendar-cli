@@ -131,26 +131,32 @@ final class ACalTests: XCTestCase {
     }
 
     func testPermissionScenariosViaEnvironmentOverrides() {
-        withEnv("ACAL_AUTH_STATE", value: "not_determined") {
-            XCTAssertEqual(EventKitAdapter.currentAuthorizationState(), .notDetermined)
-        }
+        // Auth overrides require test mode (ACAL_STORE=in_memory)
+        withEnv("ACAL_STORE", value: "in_memory") {
+            withEnv("ACAL_AUTH_STATE", value: "not_determined") {
+                XCTAssertEqual(EventKitAdapter.currentAuthorizationState(), .notDetermined)
+            }
 
-        withEnv("ACAL_AUTH_STATE", value: "denied") {
-            XCTAssertEqual(EventKitAdapter.currentAuthorizationState(), .denied)
-        }
+            withEnv("ACAL_AUTH_STATE", value: "denied") {
+                XCTAssertEqual(EventKitAdapter.currentAuthorizationState(), .denied)
+            }
 
-        withEnv("ACAL_AUTH_STATE", value: "full_access") {
-            XCTAssertEqual(EventKitAdapter.currentAuthorizationState(), .fullAccess)
+            withEnv("ACAL_AUTH_STATE", value: "full_access") {
+                XCTAssertEqual(EventKitAdapter.currentAuthorizationState(), .fullAccess)
+            }
         }
     }
 
     func testGrantFlowCanBeSimulatedForIntegrationTests() throws {
-        try withThrowingEnv("ACAL_AUTH_GRANT_RESULT", value: "denied") {
-            XCTAssertEqual(try EventKitAdapter.requestFullAccess(), .denied)
-        }
+        // Grant simulation requires test mode (ACAL_STORE=in_memory)
+        try withEnv("ACAL_STORE", value: "in_memory") {
+            try withThrowingEnv("ACAL_AUTH_GRANT_RESULT", value: "denied") {
+                XCTAssertEqual(try EventKitAdapter.requestFullAccess(), .denied)
+            }
 
-        try withThrowingEnv("ACAL_AUTH_GRANT_RESULT", value: "full_access") {
-            XCTAssertEqual(try EventKitAdapter.requestFullAccess(), .fullAccess)
+            try withThrowingEnv("ACAL_AUTH_GRANT_RESULT", value: "full_access") {
+                XCTAssertEqual(try EventKitAdapter.requestFullAccess(), .fullAccess)
+            }
         }
     }
 
@@ -179,22 +185,26 @@ final class ACalTests: XCTestCase {
     }
 
     func testDoctorReportContainsAuthState() {
-        withEnv("ACAL_AUTH_STATE", value: "restricted") {
-            let report = DoctorReport()
-            XCTAssertEqual(report.authorization, .restricted)
-            XCTAssertTrue(report.eventKitAvailable)
+        withEnv("ACAL_STORE", value: "in_memory") {
+            withEnv("ACAL_AUTH_STATE", value: "restricted") {
+                let report = DoctorReport()
+                XCTAssertEqual(report.authorization, .restricted)
+                XCTAssertTrue(report.eventKitAvailable)
+            }
         }
     }
 
-    private func withEnv(_ key: String, value: String, body: () -> Void) {
+    private func withEnv(_ key: String, value: String, body: () throws -> Void) rethrows {
         let previous = getenv(key).map { String(cString: $0) }
         setenv(key, value, 1)
-        body()
-        if let previous {
-            setenv(key, previous, 1)
-        } else {
-            unsetenv(key)
+        defer {
+            if let previous {
+                setenv(key, previous, 1)
+            } else {
+                unsetenv(key)
+            }
         }
+        try body()
     }
 
     private func withThrowingEnv(_ key: String, value: String, body: () throws -> Void) throws {
