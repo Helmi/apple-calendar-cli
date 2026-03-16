@@ -3,8 +3,8 @@ import Foundation
 public enum DateCodec {
     // Cached formatters — safe for single-threaded CLI use.
     // nonisolated(unsafe) suppresses Swift 6 concurrency warnings for static lets.
-    nonisolated(unsafe) private static let fractionalFormatter = makeISO8601Formatter(fractionalSeconds: true)
-    nonisolated(unsafe) private static let standardFormatter = makeISO8601Formatter(fractionalSeconds: false)
+    private nonisolated(unsafe) static let fractionalFormatter = makeISO8601Formatter(fractionalSeconds: true)
+    private nonisolated(unsafe) static let standardFormatter = makeISO8601Formatter(fractionalSeconds: false)
 
     private static func makeISO8601Formatter(fractionalSeconds: Bool) -> ISO8601DateFormatter {
         let formatter = ISO8601DateFormatter()

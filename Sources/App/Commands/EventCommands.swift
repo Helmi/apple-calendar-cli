@@ -26,7 +26,10 @@ struct EventOutputTimeOptions: ParsableArguments {
     @Flag(name: .long, help: "Render event timestamps in UTC (Zulu).")
     var utc = false
 
-    @Option(name: .customLong("output-timezone"), help: "Render event timestamps in a specific timezone (e.g. Europe/Berlin).")
+    @Option(
+        name: .customLong("output-timezone"),
+        help: "Render event timestamps in a specific timezone (e.g. Europe/Berlin)."
+    )
     var outputTimezone: String?
 
     func resolvedTimeZone() throws -> TimeZone {
@@ -102,7 +105,10 @@ struct EventsGetCommand: ParsableCommand {
                 ("start", renderedEvent.start),
                 ("end", renderedEvent.end),
                 ("allDay", String(renderedEvent.allDay)),
-                ("recurrence", renderedEvent.recurrence?.rrule ?? renderedEvent.recurrence?.frequency.rawValue ?? "none"),
+                (
+                    "recurrence",
+                    renderedEvent.recurrence?.rrule ?? renderedEvent.recurrence?.frequency.rawValue ?? "none"
+                ),
                 ("revision", String(renderedEvent.revision))
             ])
         }
@@ -249,7 +255,10 @@ struct EventsCreateCommand: ParsableCommand {
                 ("title", renderedEvent.title),
                 ("start", renderedEvent.start),
                 ("end", renderedEvent.end),
-                ("recurrence", renderedEvent.recurrence?.rrule ?? renderedEvent.recurrence?.frequency.rawValue ?? "none")
+                (
+                    "recurrence",
+                    renderedEvent.recurrence?.rrule ?? renderedEvent.recurrence?.frequency.rawValue ?? "none"
+                )
             ])
         }
     }

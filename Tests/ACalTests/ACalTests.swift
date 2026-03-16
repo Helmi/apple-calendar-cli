@@ -205,7 +205,10 @@ final class ACalTests: XCTestCase {
     }
 
     func testResolveEventOutputTimezoneRejectsConflictingFlags() {
-        XCTAssertThrowsError(try CLI.resolveEventOutputTimeZone(utc: true, outputTimezoneIdentifier: "Europe/Berlin")) { error in
+        XCTAssertThrowsError(try CLI.resolveEventOutputTimeZone(
+            utc: true,
+            outputTimezoneIdentifier: "Europe/Berlin"
+        )) { error in
             guard let acalError = error as? ACalError else {
                 return XCTFail("Expected ACalError")
             }
@@ -215,7 +218,10 @@ final class ACalTests: XCTestCase {
     }
 
     func testResolveEventOutputTimezoneRejectsUnknownTimezone() {
-        XCTAssertThrowsError(try CLI.resolveEventOutputTimeZone(utc: false, outputTimezoneIdentifier: "Nope/Invalid")) { error in
+        XCTAssertThrowsError(try CLI.resolveEventOutputTimeZone(
+            utc: false,
+            outputTimezoneIdentifier: "Nope/Invalid"
+        )) { error in
             guard let acalError = error as? ACalError else {
                 return XCTFail("Expected ACalError")
             }

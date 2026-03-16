@@ -7,7 +7,7 @@ public enum ACalSchema {
 /// Input length limits — prevents opaque EventKit failures from oversized fields.
 public enum ACalLimits {
     public static let maxTitleLength = 1024
-    public static let maxNotesLength = 10_000
+    public static let maxNotesLength = 10000
     public static let maxLocationLength = 1024
     public static let maxURLLength = 2048
 
