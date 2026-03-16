@@ -2,13 +2,15 @@
 
 # acal
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+### an Apple Calendar CLI
 
-An Apple Calendar CLI for macOS. Read and write your calendar from the terminal.
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 
 </div>
 
-## What it is
+> **Disclaimer:** acal is an independent open source project. It is not affiliated with, endorsed by, or associated with Apple Inc. in any way. Apple Calendar and EventKit are trademarks of Apple Inc.
+
+---
 
 `acal` is a single binary. Install it, grant access once, and any script or agent can read and write your Apple Calendar natively via EventKit — no server process required.
 
@@ -25,11 +27,11 @@ brew install acal
 
 ### Direct download
 
-Download the latest `acal-<version>-macos-universal.zip` from [Releases](https://github.com/Helmi/acal-apple-calendar-cli/releases):
+Download the latest `acal-<version>-macos-universal.zip` from [Releases](https://github.com/Helmi/acal-apple-calender-cli/releases):
 
 ```bash
 curl -L -o acal.zip \
-  https://github.com/Helmi/acal-apple-calendar-cli/releases/download/v0.2.1/acal-0.2.1-macos-universal.zip
+  https://github.com/Helmi/acal-apple-calender-cli/releases/download/v0.2.0/acal-0.2.0-macos-universal.zip
 unzip acal.zip
 chmod +x acal
 mv acal /opt/homebrew/bin/acal
@@ -54,8 +56,8 @@ acal events list --format json
 acal events create \
   --calendar "Work" \
   --title "Team Standup" \
-  --start "2026-03-10T09:00:00+01:00" \
-  --end "2026-03-10T09:30:00+01:00"
+  --start "2026-03-16T09:00:00+01:00" \
+  --end "2026-03-16T09:30:00+01:00"
 ```
 
 ## Commands
@@ -71,25 +73,9 @@ acal events create \
 
 All commands accept `--format json` for machine-readable output.
 
-### Event timestamp output timezone
-
-Event commands (`events list|get|search|create|update`) render `start`/`end` in your **system timezone by default**.
-
-Use one of these overrides when needed:
-
-```bash
-# Force UTC (Zulu)
-acal events list --from 2026-03-10 --to 2026-03-11 --utc
-
-# Force a specific IANA timezone
-acal events list --from 2026-03-10 --to 2026-03-11 --output-timezone Europe/Berlin
-```
-
-`--utc` and `--output-timezone` are mutually exclusive.
-
 ## For agents and scripts
 
-`acal` is designed to be called by AI agents with bash access. Every response uses the same envelope — `ok`, `data`, `error`, `meta` — so agents can handle success and failure without parsing workarounds.
+`acal` is designed to be called by AI agents with bash access. Every response uses the same envelope — `ok`, `data`, `error`, `meta` — so agents can handle success and failure without guesswork.
 
 ```bash
 acal events list --format json
@@ -104,8 +90,8 @@ acal events list --format json
         "id": "abc123",
         "calendarId": "work-cal-id",
         "title": "Team Standup",
-        "start": "2026-03-10T09:00:00+01:00",
-        "end": "2026-03-10T09:30:00+01:00",
+        "start": "2026-03-16T09:00:00+01:00",
+        "end": "2026-03-16T09:30:00+01:00",
         "timezone": "Europe/Berlin",
         "allDay": false,
         "recurrence": null,
@@ -116,7 +102,7 @@ acal events list --format json
   "meta": {
     "command": "events list",
     "schemaVersion": "1.0.0",
-    "timestamp": "2026-03-10T08:00:00Z"
+    "timestamp": "2026-03-16T08:00:00Z"
   }
 }
 ```
@@ -126,8 +112,8 @@ Full contract: `acal schema`
 ## Build from source
 
 ```bash
-git clone https://github.com/Helmi/acal-apple-calendar-cli.git
-cd acal-apple-calendar-cli
+git clone https://github.com/Helmi/acal-apple-calender-cli.git
+cd acal-apple-calender-cli
 swift build -c release
 swift test
 ```
