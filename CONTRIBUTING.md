@@ -1,6 +1,6 @@
-# Contributing to applecal
+# Contributing to acal
 
-Thanks for helping improve `applecal`.
+Thanks for helping improve `acal`.
 
 This repository is built for both human contributors and agent workflows, so we optimize for traceability, small changes, and deterministic behavior.
 
@@ -100,3 +100,11 @@ Before opening a PR:
 - Keep telemetry/privacy behavior aligned with `docs/policy/privacy-telemetry.md`
 
 Thanks for contributing.
+
+## Versioning
+
+`acal` follows SemVer (`MAJOR.MINOR.PATCH`).
+
+- Binary: `acal`
+- JSON schema version is tracked separately from the binary version for machine contract stability — breaking schema changes increment the schema version independently.
+- Pre-1.0: minor bumps may include breaking changes; they will be called out explicitly in release notes.

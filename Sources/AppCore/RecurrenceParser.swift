@@ -33,24 +33,24 @@ public enum RecurrenceParser {
 
         guard let frequency = flags.frequency else {
             if flags.interval != nil || flags.byDay != nil || flags.until != nil || flags.count != nil {
-                throw AppleCalError.validation("--repeat is required when recurrence flags are used.")
+                throw ACalError.validation("--repeat is required when recurrence flags are used.")
             }
             return nil
         }
 
         let interval = flags.interval ?? 1
         guard interval > 0 else {
-            throw AppleCalError.validation("--interval must be greater than 0.")
+            throw ACalError.validation("--interval must be greater than 0.")
         }
 
         if let count = flags.count, count <= 0 {
-            throw AppleCalError.validation("--count must be greater than 0.")
+            throw ACalError.validation("--count must be greater than 0.")
         }
 
         let byDay = try parseByDay(flags.byDay)
 
         if flags.until != nil, flags.count != nil {
-            throw AppleCalError.validation("Use only one of --until or --count.")
+            throw ACalError.validation("Use only one of --until or --count.")
         }
 
         return RecurrenceRuleRecord(
@@ -76,7 +76,7 @@ public enum RecurrenceParser {
         var ordered: [Weekday] = []
         for item in values {
             guard let weekday = Weekday(rawValue: item) else {
-                throw AppleCalError.validation("Invalid weekday '\(item)' in --byday.")
+                throw ACalError.validation("Invalid weekday '\(item)' in --byday.")
             }
             if unique.insert(weekday).inserted {
                 ordered.append(weekday)
@@ -88,7 +88,7 @@ public enum RecurrenceParser {
     public static func parseRRule(_ value: String) throws -> RecurrenceRuleRecord {
         let normalized = value.uppercased().trimmingCharacters(in: .whitespacesAndNewlines)
         guard !normalized.isEmpty else {
-            throw AppleCalError.validation("RRULE cannot be empty.")
+            throw ACalError.validation("RRULE cannot be empty.")
         }
 
         var frequency: RecurrenceFrequency?
@@ -110,7 +110,7 @@ public enum RecurrenceParser {
                 if let parsed = Int(val), parsed > 0 {
                     interval = parsed
                 } else {
-                    throw AppleCalError.validation("Invalid RRULE INTERVAL value '\(val)'.")
+                    throw ACalError.validation("Invalid RRULE INTERVAL value '\(val)'.")
                 }
             case "BYDAY":
                 let map: [String: Weekday] = [
@@ -125,7 +125,7 @@ public enum RecurrenceParser {
                 byDay = try val.split(separator: ",").map { token in
                     let key = String(token)
                     guard let day = map[key] else {
-                        throw AppleCalError.validation("Invalid RRULE BYDAY value '\(key)'.")
+                        throw ACalError.validation("Invalid RRULE BYDAY value '\(key)'.")
                     }
                     return day
                 }
@@ -135,7 +135,7 @@ public enum RecurrenceParser {
                 if let parsed = Int(val), parsed > 0 {
                     count = parsed
                 } else {
-                    throw AppleCalError.validation("Invalid RRULE COUNT value '\(val)'.")
+                    throw ACalError.validation("Invalid RRULE COUNT value '\(val)'.")
                 }
             default:
                 continue
@@ -143,7 +143,7 @@ public enum RecurrenceParser {
         }
 
         guard let frequency else {
-            throw AppleCalError.validation("RRULE must include FREQ.")
+            throw ACalError.validation("RRULE must include FREQ.")
         }
 
         return RecurrenceRuleRecord(

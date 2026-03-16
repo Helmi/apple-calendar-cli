@@ -93,13 +93,13 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist/release
-          cp .build/arm64-apple-macosx/release/applecal dist/release/applecal-arm64
-          cp .build/x86_64-apple-macosx/release/applecal dist/release/applecal-x86_64
+          cp .build/arm64-apple-macosx/release/acal dist/release/acal-arm64
+          cp .build/x86_64-apple-macosx/release/acal dist/release/acal-x86_64
           lipo -create \
-            -output dist/release/applecal \
-            dist/release/applecal-arm64 \
-            dist/release/applecal-x86_64
-          file dist/release/applecal
+            -output dist/release/acal \
+            dist/release/acal-arm64 \
+            dist/release/acal-x86_64
+          file dist/release/acal
 
       - name: Sign binary
         env:
@@ -108,8 +108,8 @@ jobs:
           set -euo pipefail
           codesign --force --timestamp --options runtime \
             --sign "$APPLE_SIGNING_IDENTITY" \
-            dist/release/applecal
-          codesign --verify --verbose=2 dist/release/applecal
+            dist/release/acal
+          codesign --verify --verbose=2 dist/release/acal
 
       - name: Resolve release tag/version
         id: resolve-release
@@ -132,9 +132,9 @@ jobs:
         id: package-asset
         run: |
           set -euo pipefail
-          ASSET_BASE="applecal-${RELEASE_VERSION}-macos-universal"
+          ASSET_BASE="acal-${RELEASE_VERSION}-macos-universal"
 
-          ditto -c -k --keepParent dist/release/applecal "dist/release/${ASSET_BASE}.zip"
+          ditto -c -k --keepParent dist/release/acal "dist/release/${ASSET_BASE}.zip"
           shasum -a 256 "dist/release/${ASSET_BASE}.zip" > "dist/release/${ASSET_BASE}.zip.sha256"
           ASSET_SHA256="$(awk '{print $1}' "dist/release/${ASSET_BASE}.zip.sha256")"
 
@@ -162,7 +162,7 @@ jobs:
 
       - name: Gatekeeper verification
         run: |
-          spctl -a -vv -t install dist/release/applecal
+          spctl -a -vv -t install dist/release/acal
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
@@ -201,7 +201,7 @@ jobs:
             "https://x-access-token:${HOMEBREW_TAP_GITHUB_TOKEN}@github.com/${HOMEBREW_TAP_REPOSITORY}.git" \
             "$RUNNER_TEMP/homebrew-tap"
 
-      - name: Render Formula/applecal.rb
+      - name: Render Formula/acal.rb
         run: |
           set -euo pipefail
           scripts/render-homebrew-formula.sh \
@@ -209,7 +209,7 @@ jobs:
             --sha256 "${{ needs.build-sign-notarize-release.outputs.asset_sha256 }}" \
             --repo "${{ github.repository }}" \
             --asset-base "${{ needs.build-sign-notarize-release.outputs.asset_base }}" \
-            --output "$RUNNER_TEMP/homebrew-tap/Formula/applecal.rb"
+            --output "$RUNNER_TEMP/homebrew-tap/Formula/acal.rb"
 
       - name: Commit + push formula update
         working-directory: ${{ runner.temp }}/homebrew-tap
@@ -218,11 +218,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          if git diff --quiet -- Formula/applecal.rb; then
+          if git diff --quiet -- Formula/acal.rb; then
             echo "Formula already up to date; nothing to commit."
             exit 0
           fi
 
-          git add Formula/applecal.rb
-          git commit -m "applecal ${{ needs.build-sign-notarize-release.outputs.release_tag }}"
+          git add Formula/acal.rb
+          git commit -m "acal ${{ needs.build-sign-notarize-release.outputs.release_tag }}"
           git push origin HEAD
