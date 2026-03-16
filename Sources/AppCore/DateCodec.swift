@@ -5,7 +5,6 @@ public enum DateCodec {
     // nonisolated(unsafe) suppresses Swift 6 concurrency warnings for static lets.
     nonisolated(unsafe) private static let fractionalFormatter = makeISO8601Formatter(fractionalSeconds: true)
     nonisolated(unsafe) private static let standardFormatter = makeISO8601Formatter(fractionalSeconds: false)
-    private static let dateOnlyFormatter = makeDateOnlyFormatter()
 
     private static func makeISO8601Formatter(fractionalSeconds: Bool) -> ISO8601DateFormatter {
         let formatter = ISO8601DateFormatter()
@@ -34,6 +33,7 @@ public enum DateCodec {
             return parsed
         }
 
+        let dateOnlyFormatter = makeDateOnlyFormatter()
         if let day = dateOnlyFormatter.date(from: trimmed) {
             let calendar = Calendar(identifier: .gregorian)
             let components = calendar.dateComponents(in: defaultTimeZone, from: day)
