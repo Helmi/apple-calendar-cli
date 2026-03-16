@@ -29,7 +29,7 @@ Download the latest `acal-<version>-macos-universal.zip` from [Releases](https:/
 
 ```bash
 curl -L -o acal.zip \
-  https://github.com/Helmi/acal-apple-calendar-cli/releases/download/v0.2.0/acal-0.2.0-macos-universal.zip
+  https://github.com/Helmi/acal-apple-calendar-cli/releases/download/v0.2.1/acal-0.2.1-macos-universal.zip
 unzip acal.zip
 chmod +x acal
 mv acal /opt/homebrew/bin/acal
@@ -70,6 +70,22 @@ acal events create \
 | `completion bash\|zsh\|fish` | Install shell completions |
 
 All commands accept `--format json` for machine-readable output.
+
+### Event timestamp output timezone
+
+Event commands (`events list|get|search|create|update`) render `start`/`end` in your **system timezone by default**.
+
+Use one of these overrides when needed:
+
+```bash
+# Force UTC (Zulu)
+acal events list --from 2026-03-10 --to 2026-03-11 --utc
+
+# Force a specific IANA timezone
+acal events list --from 2026-03-10 --to 2026-03-11 --output-timezone Europe/Berlin
+```
+
+`--utc` and `--output-timezone` are mutually exclusive.
 
 ## For agents and scripts
 

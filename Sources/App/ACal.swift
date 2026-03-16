@@ -128,6 +128,39 @@ enum CLI {
         return timezone
     }
 
+    static func resolveEventOutputTimeZone(utc: Bool, outputTimezoneIdentifier: String?) throws -> TimeZone {
+        if utc, outputTimezoneIdentifier != nil {
+            throw ACalError.validation("--utc and --output-timezone cannot be used together.")
+        }
+
+        if utc {
+            return TimeZone(secondsFromGMT: 0) ?? .current
+        }
+
+        return try parseTimezone(outputTimezoneIdentifier)
+    }
+
+    static func eventWithOutputTimeZone(_ event: EventRecord, timeZone: TimeZone) throws -> EventRecord {
+        var rendered = event
+
+        let startDate = try DateCodec.parse(event.start)
+        let endDate = try DateCodec.parse(event.end)
+
+        rendered.start = DateCodec.iso8601String(from: startDate, timeZone: timeZone)
+        rendered.end = DateCodec.iso8601String(from: endDate, timeZone: timeZone)
+
+        if let occurrenceStart = event.occurrenceStart {
+            let occurrenceDate = try DateCodec.parse(occurrenceStart)
+            rendered.occurrenceStart = DateCodec.iso8601String(from: occurrenceDate, timeZone: timeZone)
+        }
+
+        return rendered
+    }
+
+    static func eventsWithOutputTimeZone(_ events: [EventRecord], timeZone: TimeZone) throws -> [EventRecord] {
+        try events.map { try eventWithOutputTimeZone($0, timeZone: timeZone) }
+    }
+
     static func resolveCalendarIDs(_ values: [String]) throws -> Set<String> {
         guard !values.isEmpty else { return [] }
 

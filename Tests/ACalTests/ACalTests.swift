@@ -194,6 +194,56 @@ final class ACalTests: XCTestCase {
         }
     }
 
+    func testResolveEventOutputTimezoneDefaultsToSystem() throws {
+        let resolved = try CLI.resolveEventOutputTimeZone(utc: false, outputTimezoneIdentifier: nil)
+        XCTAssertEqual(resolved.identifier, TimeZone.current.identifier)
+    }
+
+    func testResolveEventOutputTimezoneSupportsUTCFlag() throws {
+        let resolved = try CLI.resolveEventOutputTimeZone(utc: true, outputTimezoneIdentifier: nil)
+        XCTAssertEqual(resolved.secondsFromGMT(), 0)
+    }
+
+    func testResolveEventOutputTimezoneRejectsConflictingFlags() {
+        XCTAssertThrowsError(try CLI.resolveEventOutputTimeZone(utc: true, outputTimezoneIdentifier: "Europe/Berlin")) { error in
+            guard let acalError = error as? ACalError else {
+                return XCTFail("Expected ACalError")
+            }
+            XCTAssertEqual(acalError.code, .validationFailed)
+            XCTAssertTrue(acalError.message.text.contains("--utc and --output-timezone"))
+        }
+    }
+
+    func testResolveEventOutputTimezoneRejectsUnknownTimezone() {
+        XCTAssertThrowsError(try CLI.resolveEventOutputTimeZone(utc: false, outputTimezoneIdentifier: "Nope/Invalid")) { error in
+            guard let acalError = error as? ACalError else {
+                return XCTFail("Expected ACalError")
+            }
+            XCTAssertEqual(acalError.code, .validationFailed)
+            XCTAssertTrue(acalError.message.text.contains("Unknown timezone"))
+        }
+    }
+
+    func testEventOutputRenderingUsesRequestedTimezone() throws {
+        let event = EventRecord(
+            id: "evt-1",
+            externalId: "ext-1",
+            calendarId: "cal-default",
+            title: "TZ Test",
+            start: "2026-03-16T09:00:00Z",
+            end: "2026-03-16T10:00:00Z",
+            timezone: "Europe/Berlin",
+            allDay: false
+        )
+
+        let berlin = try XCTUnwrap(TimeZone(identifier: "Europe/Berlin"))
+        let rendered = try CLI.eventWithOutputTimeZone(event, timeZone: berlin)
+
+        XCTAssertEqual(rendered.start, "2026-03-16T10:00:00+01:00")
+        XCTAssertEqual(rendered.end, "2026-03-16T11:00:00+01:00")
+        XCTAssertEqual(rendered.timezone, "Europe/Berlin")
+    }
+
     private func withEnv(_ key: String, value: String, body: () throws -> Void) rethrows {
         let previous = getenv(key).map { String(cString: $0) }
         setenv(key, value, 1)

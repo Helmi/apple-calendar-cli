@@ -59,4 +59,10 @@ public enum DateCodec {
     public static func iso8601String(from date: Date) -> String {
         standardFormatter.string(from: date)
     }
+
+    public static func iso8601String(from date: Date, timeZone: TimeZone) -> String {
+        let formatter = makeISO8601Formatter(fractionalSeconds: false)
+        formatter.timeZone = timeZone
+        return formatter.string(from: date)
+    }
 }

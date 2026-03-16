@@ -22,6 +22,18 @@ struct EventsCommand: ParsableCommand {
     }
 }
 
+struct EventOutputTimeOptions: ParsableArguments {
+    @Flag(name: .long, help: "Render event timestamps in UTC (Zulu).")
+    var utc = false
+
+    @Option(name: .customLong("output-timezone"), help: "Render event timestamps in a specific timezone (e.g. Europe/Berlin).")
+    var outputTimezone: String?
+
+    func resolvedTimeZone() throws -> TimeZone {
+        try CLI.resolveEventOutputTimeZone(utc: utc, outputTimezoneIdentifier: outputTimezone)
+    }
+}
+
 struct EventsListCommand: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "list",
@@ -38,17 +50,20 @@ struct EventsListCommand: ParsableCommand {
     var calendar: [String] = []
 
     @OptionGroup var output: GlobalOutputOptions
+    @OptionGroup var eventTimeOutput: EventOutputTimeOptions
 
     mutating func run() throws {
         let start = try DateCodec.parse(from)
         let end = try DateCodec.parse(to)
         let calendarIDs = try CLI.resolveCalendarIDs(calendar)
         let events = try CLI.store.listEvents(from: start, to: end, calendarIDs: calendarIDs)
+        let outputTimeZone = try eventTimeOutput.resolvedTimeZone()
+        let renderedEvents = try CLI.eventsWithOutputTimeZone(events, timeZone: outputTimeZone)
 
-        try CLI.printSuccess(command: "events list", data: events, options: output) {
+        try CLI.printSuccess(command: "events list", data: renderedEvents, options: output) {
             OutputPrinter.renderTable(
                 headers: ["id", "title", "start", "end", "calendar"],
-                rows: events.map { [$0.id, $0.title, $0.start, $0.end, $0.calendarId] }
+                rows: renderedEvents.map { [$0.id, $0.title, $0.start, $0.end, $0.calendarId] }
             )
         }
     }
@@ -67,6 +82,7 @@ struct EventsGetCommand: ParsableCommand {
     var externalId: String?
 
     @OptionGroup var output: GlobalOutputOptions
+    @OptionGroup var eventTimeOutput: EventOutputTimeOptions
 
     mutating func run() throws {
         guard id != nil || externalId != nil else {
@@ -74,18 +90,20 @@ struct EventsGetCommand: ParsableCommand {
         }
 
         let event = try CLI.store.getEvent(id: id, externalID: externalId)
+        let outputTimeZone = try eventTimeOutput.resolvedTimeZone()
+        let renderedEvent = try CLI.eventWithOutputTimeZone(event, timeZone: outputTimeZone)
 
-        try CLI.printSuccess(command: "events get", data: event, options: output) {
+        try CLI.printSuccess(command: "events get", data: renderedEvent, options: output) {
             CLI.keyValueTable([
-                ("id", event.id),
-                ("externalId", event.externalId),
-                ("calendarId", event.calendarId),
-                ("title", event.title),
-                ("start", event.start),
-                ("end", event.end),
-                ("allDay", String(event.allDay)),
-                ("recurrence", event.recurrence?.rrule ?? event.recurrence?.frequency.rawValue ?? "none"),
-                ("revision", String(event.revision))
+                ("id", renderedEvent.id),
+                ("externalId", renderedEvent.externalId),
+                ("calendarId", renderedEvent.calendarId),
+                ("title", renderedEvent.title),
+                ("start", renderedEvent.start),
+                ("end", renderedEvent.end),
+                ("allDay", String(renderedEvent.allDay)),
+                ("recurrence", renderedEvent.recurrence?.rrule ?? renderedEvent.recurrence?.frequency.rawValue ?? "none"),
+                ("revision", String(renderedEvent.revision))
             ])
         }
     }
@@ -110,17 +128,20 @@ struct EventsSearchCommand: ParsableCommand {
     var calendar: [String] = []
 
     @OptionGroup var output: GlobalOutputOptions
+    @OptionGroup var eventTimeOutput: EventOutputTimeOptions
 
     mutating func run() throws {
         let start = try DateCodec.parse(from)
         let end = try DateCodec.parse(to)
         let calendarIDs = try CLI.resolveCalendarIDs(calendar)
         let events = try CLI.store.searchEvents(query: query, from: start, to: end, calendarIDs: calendarIDs)
+        let outputTimeZone = try eventTimeOutput.resolvedTimeZone()
+        let renderedEvents = try CLI.eventsWithOutputTimeZone(events, timeZone: outputTimeZone)
 
-        try CLI.printSuccess(command: "events search", data: events, options: output) {
+        try CLI.printSuccess(command: "events search", data: renderedEvents, options: output) {
             OutputPrinter.renderTable(
                 headers: ["id", "title", "start", "calendar"],
-                rows: events.map { [$0.id, $0.title, $0.start, $0.calendarId] }
+                rows: renderedEvents.map { [$0.id, $0.title, $0.start, $0.calendarId] }
             )
         }
     }
@@ -180,6 +201,7 @@ struct EventsCreateCommand: ParsableCommand {
     var alarmMinutes: [Int] = []
 
     @OptionGroup var output: GlobalOutputOptions
+    @OptionGroup var eventTimeOutput: EventOutputTimeOptions
 
     mutating func run() throws {
         let resolvedCalendar: CalendarRecord
@@ -217,14 +239,17 @@ struct EventsCreateCommand: ParsableCommand {
             alarms: alarms
         ))
 
-        try CLI.printSuccess(command: "events create", data: event, options: output) {
+        let outputTimeZone = try eventTimeOutput.resolvedTimeZone()
+        let renderedEvent = try CLI.eventWithOutputTimeZone(event, timeZone: outputTimeZone)
+
+        try CLI.printSuccess(command: "events create", data: renderedEvent, options: output) {
             CLI.keyValueTable([
-                ("id", event.id),
-                ("calendarId", event.calendarId),
-                ("title", event.title),
-                ("start", event.start),
-                ("end", event.end),
-                ("recurrence", event.recurrence?.rrule ?? event.recurrence?.frequency.rawValue ?? "none")
+                ("id", renderedEvent.id),
+                ("calendarId", renderedEvent.calendarId),
+                ("title", renderedEvent.title),
+                ("start", renderedEvent.start),
+                ("end", renderedEvent.end),
+                ("recurrence", renderedEvent.recurrence?.rrule ?? renderedEvent.recurrence?.frequency.rawValue ?? "none")
             ])
         }
     }
@@ -272,6 +297,7 @@ struct EventsUpdateCommand: ParsableCommand {
     var alarmMinutes: [Int] = []
 
     @OptionGroup var output: GlobalOutputOptions
+    @OptionGroup var eventTimeOutput: EventOutputTimeOptions
 
     mutating func run() throws {
         let timezoneObject = try CLI.parseTimezone(timezone)
@@ -320,13 +346,16 @@ struct EventsUpdateCommand: ParsableCommand {
             )
         )
 
-        try CLI.printSuccess(command: "events update", data: event, options: output) {
+        let outputTimeZone = try eventTimeOutput.resolvedTimeZone()
+        let renderedEvent = try CLI.eventWithOutputTimeZone(event, timeZone: outputTimeZone)
+
+        try CLI.printSuccess(command: "events update", data: renderedEvent, options: output) {
             CLI.keyValueTable([
-                ("id", event.id),
-                ("title", event.title),
-                ("start", event.start),
-                ("end", event.end),
-                ("revision", String(event.revision))
+                ("id", renderedEvent.id),
+                ("title", renderedEvent.title),
+                ("start", renderedEvent.start),
+                ("end", renderedEvent.end),
+                ("revision", String(renderedEvent.revision))
             ])
         }
     }
