@@ -8,19 +8,19 @@ MAN_DIR="${DIST_DIR}/man"
 
 mkdir -p "${COMPLETIONS_DIR}" "${MAN_DIR}"
 
-swift run applecal completion bash > "${COMPLETIONS_DIR}/applecal.bash"
-swift run applecal completion zsh > "${COMPLETIONS_DIR}/_applecal"
-swift run applecal completion fish > "${COMPLETIONS_DIR}/applecal.fish"
+swift run acal completion bash > "${COMPLETIONS_DIR}/acal.bash"
+swift run acal completion zsh > "${COMPLETIONS_DIR}/_acal"
+swift run acal completion fish > "${COMPLETIONS_DIR}/acal.fish"
 
-cat > "${MAN_DIR}/applecal.1" <<EOF
-.TH APPLECAL 1
+cat > "${MAN_DIR}/acal.1" <<EOF
+.TH ACAL 1
 .SH NAME
-applecal \- Apple Calendar CLI
+acal \- A Calendar CLI
 .SH SYNOPSIS
-.B applecal
+.B acal
 <subcommand> [options]
 .SH DESCRIPTION
-EventKit-native Apple Calendar CLI for humans and agents.
+EventKit-native A Calendar CLI for humans and agents.
 .SH SUBCOMMANDS
 doctor, auth, calendars, events, completion, schema
 EOF

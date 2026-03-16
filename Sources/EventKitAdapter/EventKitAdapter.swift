@@ -7,9 +7,16 @@ public enum EventKitAdapter {
         true
     }
 
-    public static func currentAuthorizationState() -> AppleCalAuthorizationState {
-        if let override = ProcessInfo.processInfo.environment["APPLECAL_AUTH_STATE"],
-           let overridden = AppleCalAuthorizationState(rawValue: override)
+    /// Returns true when the in-memory test store is active.
+    static var isTestMode: Bool {
+        ProcessInfo.processInfo.environment["ACAL_STORE"]?.lowercased() == "in_memory"
+    }
+
+    public static func currentAuthorizationState() -> ACalAuthorizationState {
+        // Auth overrides are only honored in test mode (ACAL_STORE=in_memory)
+        if isTestMode,
+           let override = ProcessInfo.processInfo.environment["ACAL_AUTH_STATE"],
+           let overridden = ACalAuthorizationState(rawValue: override)
         {
             return overridden
         }
@@ -31,9 +38,11 @@ public enum EventKitAdapter {
         }
     }
 
-    public static func requestFullAccess() throws -> AppleCalAuthorizationState {
-        if let simulated = ProcessInfo.processInfo.environment["APPLECAL_AUTH_GRANT_RESULT"],
-           let state = AppleCalAuthorizationState(rawValue: simulated)
+    public static func requestFullAccess() throws -> ACalAuthorizationState {
+        // Grant simulation is only honored in test mode (ACAL_STORE=in_memory)
+        if isTestMode,
+           let simulated = ProcessInfo.processInfo.environment["ACAL_AUTH_GRANT_RESULT"],
+           let state = ACalAuthorizationState(rawValue: simulated)
         {
             return state
         }
@@ -59,9 +68,9 @@ public enum EventKitAdapter {
         semaphore.wait()
 
         if let requestError = box.error {
-            throw AppleCalError(
+            throw ACalError(
                 code: .eventKitFailure,
-                message: AppleCalUserMessage("EventKit authorization request failed."),
+                message: ACalUserMessage("EventKit authorization request failed."),
                 details: ["cause": String(describing: requestError)]
             )
         }
@@ -130,7 +139,7 @@ public final class EventKitCalendarStore: CalendarStore, @unchecked Sendable {
     public static let shared = EventKitCalendarStore()
 
     private let store = EKEventStore()
-    private let queue = DispatchQueue(label: "applecal.eventkit.store")
+    private let queue = DispatchQueue(label: "acal.eventkit.store")
 
     public init() {}
 
@@ -162,7 +171,7 @@ public final class EventKitCalendarStore: CalendarStore, @unchecked Sendable {
             return calendar
         }
 
-        throw AppleCalError.notFound("Calendar not found.", details: ["id": id ?? "", "name": name ?? ""])
+        throw ACalError.notFound("Calendar not found.", details: ["id": id ?? "", "name": name ?? ""])
     }
 
     public func listEvents(from start: Date, to end: Date, calendarIDs: Set<String>) throws -> [EventRecord] {
@@ -197,7 +206,7 @@ public final class EventKitCalendarStore: CalendarStore, @unchecked Sendable {
             }
 
             guard let externalID else {
-                throw AppleCalError.notFound(
+                throw ACalError.notFound(
                     "Event not found.",
                     details: ["id": id ?? "", "externalId": externalID ?? ""]
                 )
@@ -211,7 +220,7 @@ public final class EventKitCalendarStore: CalendarStore, @unchecked Sendable {
                 return match
             }
 
-            throw AppleCalError.notFound("Event not found.", details: ["id": id ?? "", "externalId": externalID])
+            throw ACalError.notFound("Event not found.", details: ["id": id ?? "", "externalId": externalID])
         }
     }
 
@@ -233,9 +242,15 @@ public final class EventKitCalendarStore: CalendarStore, @unchecked Sendable {
     public func createEvent(input: EventCreateInput) throws -> EventRecord {
         try queue.sync {
             try ensureWriteAccess()
+            try ACalLimits.validateEventFields(
+                title: input.title,
+                notes: input.notes,
+                location: input.location,
+                url: input.url?.absoluteString
+            )
 
             guard let calendar = store.calendar(withIdentifier: input.calendarId) else {
-                throw AppleCalError.notFound("Calendar '\(input.calendarId)' does not exist.")
+                throw ACalError.notFound("Calendar '\(input.calendarId)' does not exist.")
             }
 
             let event = EKEvent(eventStore: store)
@@ -272,14 +287,20 @@ public final class EventKitCalendarStore: CalendarStore, @unchecked Sendable {
     ) throws -> EventRecord {
         try queue.sync {
             try ensureWriteAccess()
+            try ACalLimits.validateEventFields(
+                title: input.title,
+                notes: input.notes,
+                location: input.location,
+                url: input.url?.absoluteString
+            )
 
             guard let event = store.calendarItem(withIdentifier: id) as? EKEvent else {
-                throw AppleCalError.notFound("Event '\(id)' was not found.")
+                throw ACalError.notFound("Event '\(id)' was not found.")
             }
 
             let currentRevision = revision(for: event)
             if let expectedRevision = input.expectedRevision, expectedRevision != currentRevision {
-                throw AppleCalError.conflict(
+                throw ACalError.conflict(
                     "Event revision mismatch.",
                     details: ["expected": String(expectedRevision), "current": String(currentRevision)]
                 )
@@ -319,19 +340,19 @@ public final class EventKitCalendarStore: CalendarStore, @unchecked Sendable {
             try ensureWriteAccess()
 
             guard let event = store.calendarItem(withIdentifier: id) as? EKEvent else {
-                throw AppleCalError.notFound("Event '\(id)' was not found.")
+                throw ACalError.notFound("Event '\(id)' was not found.")
             }
 
             let currentRevision = revision(for: event)
             if let expectedRevision = input.expectedRevision, expectedRevision != currentRevision {
-                throw AppleCalError.conflict(
+                throw ACalError.conflict(
                     "Event revision mismatch.",
                     details: ["expected": String(expectedRevision), "current": String(currentRevision)]
                 )
             }
 
             if input.scope != .all, input.occurrenceStart == nil {
-                throw AppleCalError.validation("--occurrence-start is required when scope is this or future.")
+                throw ACalError.validation("--occurrence-start is required when scope is this or future.")
             }
 
             try store.remove(event, span: eventSpan(for: input.scope), commit: true)
@@ -342,17 +363,20 @@ public final class EventKitCalendarStore: CalendarStore, @unchecked Sendable {
     private func ensureReadAccess() throws {
         let state = EventKitAdapter.currentAuthorizationState()
         guard state == .fullAccess else {
-            throw AppleCalError(code: .permissionDenied, message: "Read access requires full calendar permission.")
+            throw ACalError(code: .permissionDenied, message: "Read access requires full calendar permission.")
         }
     }
 
     private func ensureWriteAccess() throws {
         let state = EventKitAdapter.currentAuthorizationState()
-        guard state == .fullAccess else {
-            throw AppleCalError(code: .permissionDenied, message: "Write access requires full calendar permission.")
+        guard state.hasWriteAccess else {
+            throw ACalError(code: .permissionDenied, message: "Write access requires calendar write permission.")
         }
     }
 
+    /// Maps our scope enum to EKSpan. Both `.future` and `.all` use `.futureEvents`
+    /// because EventKit's `.futureEvents` span applied to the series master effectively
+    /// modifies/deletes all occurrences (the entire series).
     private func eventSpan(for scope: EventDeleteScope) -> EKSpan {
         switch scope {
         case .this:

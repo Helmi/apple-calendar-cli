@@ -3,12 +3,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "applecal",
+    name: "acal",
     platforms: [
         .macOS(.v14)
     ],
     products: [
-        .executable(name: "applecal", targets: ["App"])
+        .executable(name: "acal", targets: ["App"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0")
@@ -41,7 +41,7 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "AppleCalTests",
+            name: "ACalTests",
             dependencies: [
                 "AppCore",
                 "App",

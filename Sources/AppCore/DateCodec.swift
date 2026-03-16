@@ -1,6 +1,11 @@
 import Foundation
 
 public enum DateCodec {
+    // Cached formatters — safe for single-threaded CLI use.
+    // nonisolated(unsafe) suppresses Swift 6 concurrency warnings for static lets.
+    private nonisolated(unsafe) static let fractionalFormatter = makeISO8601Formatter(fractionalSeconds: true)
+    private nonisolated(unsafe) static let standardFormatter = makeISO8601Formatter(fractionalSeconds: false)
+
     private static func makeISO8601Formatter(fractionalSeconds: Bool) -> ISO8601DateFormatter {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = fractionalSeconds
@@ -21,18 +26,15 @@ public enum DateCodec {
     public static func parse(_ value: String, defaultTimeZone: TimeZone = .current) throws -> Date {
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
-            throw AppleCalError.validation("Date/time cannot be empty.")
+            throw ACalError.validation("Date/time cannot be empty.")
         }
 
-        let fractional = makeISO8601Formatter(fractionalSeconds: true)
-        let standard = makeISO8601Formatter(fractionalSeconds: false)
-
-        if let parsed = fractional.date(from: trimmed) ?? standard.date(from: trimmed) {
+        if let parsed = fractionalFormatter.date(from: trimmed) ?? standardFormatter.date(from: trimmed) {
             return parsed
         }
 
-        let dateOnly = makeDateOnlyFormatter()
-        if let day = dateOnly.date(from: trimmed) {
+        let dateOnlyFormatter = makeDateOnlyFormatter()
+        if let day = dateOnlyFormatter.date(from: trimmed) {
             let calendar = Calendar(identifier: .gregorian)
             let components = calendar.dateComponents(in: defaultTimeZone, from: day)
             guard let converted = calendar.date(from: DateComponents(
@@ -44,17 +46,23 @@ public enum DateCodec {
                 minute: 0,
                 second: 0
             )) else {
-                throw AppleCalError.validation("Could not convert date '\(value)' to the configured timezone.")
+                throw ACalError.validation("Could not convert date '\(value)' to the configured timezone.")
             }
             return converted
         }
 
-        throw AppleCalError.validation(
+        throw ACalError.validation(
             "Unsupported date format '\(value)'. Use ISO-8601 date-time or YYYY-MM-DD."
         )
     }
 
     public static func iso8601String(from date: Date) -> String {
-        makeISO8601Formatter(fractionalSeconds: false).string(from: date)
+        standardFormatter.string(from: date)
+    }
+
+    public static func iso8601String(from date: Date, timeZone: TimeZone) -> String {
+        let formatter = makeISO8601Formatter(fractionalSeconds: false)
+        formatter.timeZone = timeZone
+        return formatter.string(from: date)
     }
 }

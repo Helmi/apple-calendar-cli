@@ -1,6 +1,6 @@
 import Foundation
 
-public enum AppleCalMachineErrorCode: String, Codable, Sendable {
+public enum ACalMachineErrorCode: String, Codable, Sendable {
     case invalidArguments = "INVALID_ARGUMENTS"
     case permissionDenied = "PERMISSION_DENIED"
     case notFound = "NOT_FOUND"
@@ -9,26 +9,26 @@ public enum AppleCalMachineErrorCode: String, Codable, Sendable {
     case eventKitFailure = "EVENTKIT_FAILURE"
     case internalError = "INTERNAL_ERROR"
 
-    public var defaultMessage: AppleCalUserMessage {
+    public var defaultMessage: ACalUserMessage {
         switch self {
         case .invalidArguments:
-            return AppleCalUserMessage("Invalid command usage.")
+            return ACalUserMessage("Invalid command usage.")
         case .permissionDenied:
-            return AppleCalUserMessage("Full calendar access not granted.")
+            return ACalUserMessage("Full calendar access not granted.")
         case .notFound:
-            return AppleCalUserMessage("Requested calendar item was not found.")
+            return ACalUserMessage("Requested calendar item was not found.")
         case .conflict:
-            return AppleCalUserMessage("Operation conflicts with current state.")
+            return ACalUserMessage("Operation conflicts with current state.")
         case .validationFailed:
-            return AppleCalUserMessage("Input validation failed.")
+            return ACalUserMessage("Input validation failed.")
         case .eventKitFailure:
-            return AppleCalUserMessage("Calendar subsystem returned an error.")
+            return ACalUserMessage("Calendar subsystem returned an error.")
         case .internalError:
-            return AppleCalUserMessage("An internal error occurred.")
+            return ACalUserMessage("An internal error occurred.")
         }
     }
 
-    public var mappedExitCode: AppleCalProcessExitCode {
+    public var mappedExitCode: ACalProcessExitCode {
         switch self {
         case .invalidArguments:
             return .invalidUsage
@@ -46,7 +46,7 @@ public enum AppleCalMachineErrorCode: String, Codable, Sendable {
     }
 }
 
-public struct AppleCalUserMessage: Codable, Equatable, ExpressibleByStringLiteral, Sendable {
+public struct ACalUserMessage: Codable, Equatable, ExpressibleByStringLiteral, Sendable {
     public let text: String
 
     public init(_ text: String) {
@@ -58,7 +58,7 @@ public struct AppleCalUserMessage: Codable, Equatable, ExpressibleByStringLitera
     }
 }
 
-public enum AppleCalProcessExitCode: Int32, Codable, Sendable {
+public enum ACalProcessExitCode: Int32, Codable, Sendable {
     case success = 0
     case failure = 1
     case invalidUsage = 2
@@ -68,17 +68,17 @@ public enum AppleCalProcessExitCode: Int32, Codable, Sendable {
     case eventKitFailure = 10
 }
 
-public struct AppleCalError: Error, Sendable {
-    public let code: AppleCalMachineErrorCode
-    public let message: AppleCalUserMessage
-    public let exitCode: AppleCalProcessExitCode
+public struct ACalError: Error, Sendable {
+    public let code: ACalMachineErrorCode
+    public let message: ACalUserMessage
+    public let exitCode: ACalProcessExitCode
     public let details: [String: String]
 
     public init(
-        code: AppleCalMachineErrorCode,
-        message: AppleCalUserMessage? = nil,
+        code: ACalMachineErrorCode,
+        message: ACalUserMessage? = nil,
         details: [String: String] = [:],
-        exitCode: AppleCalProcessExitCode? = nil
+        exitCode: ACalProcessExitCode? = nil
     ) {
         self.code = code
         self.message = message ?? code.defaultMessage
@@ -86,19 +86,19 @@ public struct AppleCalError: Error, Sendable {
         self.exitCode = exitCode ?? code.mappedExitCode
     }
 
-    public static func invalidArguments(_ message: String) -> AppleCalError {
-        AppleCalError(code: .invalidArguments, message: AppleCalUserMessage(message))
+    public static func invalidArguments(_ message: String) -> ACalError {
+        ACalError(code: .invalidArguments, message: ACalUserMessage(message))
     }
 
-    public static func validation(_ message: String, details: [String: String] = [:]) -> AppleCalError {
-        AppleCalError(code: .validationFailed, message: AppleCalUserMessage(message), details: details)
+    public static func validation(_ message: String, details: [String: String] = [:]) -> ACalError {
+        ACalError(code: .validationFailed, message: ACalUserMessage(message), details: details)
     }
 
-    public static func notFound(_ message: String, details: [String: String] = [:]) -> AppleCalError {
-        AppleCalError(code: .notFound, message: AppleCalUserMessage(message), details: details)
+    public static func notFound(_ message: String, details: [String: String] = [:]) -> ACalError {
+        ACalError(code: .notFound, message: ACalUserMessage(message), details: details)
     }
 
-    public static func conflict(_ message: String, details: [String: String] = [:]) -> AppleCalError {
-        AppleCalError(code: .conflict, message: AppleCalUserMessage(message), details: details)
+    public static func conflict(_ message: String, details: [String: String] = [:]) -> ACalError {
+        ACalError(code: .conflict, message: ACalUserMessage(message), details: details)
     }
 }
