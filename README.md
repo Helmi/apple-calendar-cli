@@ -27,11 +27,11 @@ brew install acal
 
 ### Direct download
 
-Download the latest `acal-<version>-macos-universal.zip` from [Releases](https://github.com/Helmi/acal-apple-calender-cli/releases):
+Download the latest `acal-<version>-macos-universal.zip` from [Releases](https://github.com/Helmi/acal-apple-calendar-cli/releases):
 
 ```bash
 curl -L -o acal.zip \
-  https://github.com/Helmi/acal-apple-calender-cli/releases/download/v0.2.0/acal-0.2.0-macos-universal.zip
+  https://github.com/Helmi/acal-apple-calendar-cli/releases/download/v0.2.0/acal-0.2.0-macos-universal.zip
 unzip acal.zip
 chmod +x acal
 mv acal /opt/homebrew/bin/acal
@@ -112,8 +112,8 @@ Full contract: `acal schema`
 ## Build from source
 
 ```bash
-git clone https://github.com/Helmi/acal-apple-calender-cli.git
-cd acal-apple-calender-cli
+git clone https://github.com/Helmi/acal-apple-calendar-cli.git
+cd acal-apple-calendar-cli
 swift build -c release
 swift test
 ```
