@@ -31,7 +31,7 @@ Download the latest `acal-<version>-macos-universal.zip` from [Releases](https:/
 
 ```bash
 curl -L -o acal.zip \
-  https://github.com/Helmi/acal-apple-calendar-cli/releases/download/v0.2.0/acal-0.2.0-macos-universal.zip
+  https://github.com/Helmi/acal-apple-calendar-cli/releases/download/v0.2.1/acal-0.2.1-macos-universal.zip
 unzip acal.zip
 chmod +x acal
 mv acal /opt/homebrew/bin/acal
