@@ -35,14 +35,14 @@ trap 'rm -rf "$TMPDIR"' EXIT
 info "Downloading ${ASSET}..."
 curl -sSfL -o "${TMPDIR}/${ASSET}" "$URL" || fail "Download failed. Check https://github.com/${REPO}/releases"
 
-# Verify checksum if available
-if curl -sSfL -o "${TMPDIR}/checksum.sha256" "$CHECKSUM_URL" 2>/dev/null; then
-  info "Verifying checksum..."
-  EXPECTED=$(awk '{print $1}' "${TMPDIR}/checksum.sha256")
-  ACTUAL=$(shasum -a 256 "${TMPDIR}/${ASSET}" | awk '{print $1}')
-  [ "$EXPECTED" = "$ACTUAL" ] || fail "Checksum mismatch. Expected ${EXPECTED}, got ${ACTUAL}."
-  success "Checksum verified"
-fi
+# Verify checksum (required)
+info "Verifying checksum..."
+curl -sSfL -o "${TMPDIR}/checksum.sha256" "$CHECKSUM_URL" \
+  || fail "Checksum file not available. Cannot verify download integrity."
+EXPECTED=$(awk '{print $1}' "${TMPDIR}/checksum.sha256")
+ACTUAL=$(shasum -a 256 "${TMPDIR}/${ASSET}" | awk '{print $1}')
+[ "$EXPECTED" = "$ACTUAL" ] || fail "Checksum mismatch. Expected ${EXPECTED}, got ${ACTUAL}."
+success "Checksum verified"
 
 # Extract
 info "Extracting..."
@@ -51,6 +51,10 @@ unzip -qo "${TMPDIR}/${ASSET}" -d "${TMPDIR}"
 chmod +x "${TMPDIR}/${BINARY}"
 
 # Install
+if [ ! -d "$INSTALL_DIR" ]; then
+  info "Creating ${INSTALL_DIR}..."
+  mkdir -p "$INSTALL_DIR" 2>/dev/null || sudo mkdir -p "$INSTALL_DIR"
+fi
 if [ -w "$INSTALL_DIR" ]; then
   mv "${TMPDIR}/${BINARY}" "${INSTALL_DIR}/${BINARY}"
 else

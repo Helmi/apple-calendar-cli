@@ -190,7 +190,9 @@ enum MCPArgExtract {
     static func int(_ value: Value?) -> Int? {
         switch value {
         case let .int(num): return num
-        case let .double(num): return Int(num)
+        case let .double(num):
+            guard num.isFinite, num >= Double(Int.min), num <= Double(Int.max) else { return nil }
+            return Int(exactly: num.rounded())
         case let .string(str): return Int(str)
         default: return nil
         }
@@ -199,7 +201,8 @@ enum MCPArgExtract {
     static func bool(_ value: Value?) -> Bool? {
         switch value {
         case let .bool(flag): return flag
-        case let .string(str): return str == "true"
+        case let .string(str) where str == "true" || str == "false":
+            return str == "true"
         default: return nil
         }
     }
@@ -273,6 +276,9 @@ enum MCPToolHandler {
         limit: Int,
         store: any CalendarStore = CLI.store
     ) throws -> String {
+        guard limit > 0 else {
+            throw ACalError.validation("'limit' must be a positive integer.")
+        }
         let start = try DateCodec.parse(from)
         let end = try DateCodec.parse(to)
         let calendarIDs = try resolveCalendarIDs(calendars, store: store)
@@ -303,6 +309,9 @@ enum MCPToolHandler {
         limit: Int,
         store: any CalendarStore = CLI.store
     ) throws -> String {
+        guard limit > 0 else {
+            throw ACalError.validation("'limit' must be a positive integer.")
+        }
         let start = try DateCodec.parse(from)
         let end = try DateCodec.parse(to)
         let calendarIDs = try resolveCalendarIDs(calendars, store: store)
@@ -482,7 +491,7 @@ enum MCPToolHandler {
 
     static func toJSON<T: Encodable>(_ value: T) throws -> String {
         let encoder = JSONEncoder()
-        encoder.outputFormatting = [.sortedKeys, .prettyPrinted]
+        encoder.outputFormatting = [.sortedKeys]
         let data = try encoder.encode(value)
         guard let string = String(data: data, encoding: .utf8) else {
             throw ACalError.validation("Failed to encode response as JSON.")
