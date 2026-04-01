@@ -189,17 +189,17 @@ struct MCPCommand: AsyncParsableCommand {
 enum MCPArgExtract {
     static func int(_ value: Value?) -> Int? {
         switch value {
-        case let .int(n): return n
-        case let .double(n): return Int(n)
-        case let .string(s): return Int(s)
+        case let .int(num): return num
+        case let .double(num): return Int(num)
+        case let .string(str): return Int(str)
         default: return nil
         }
     }
 
     static func bool(_ value: Value?) -> Bool? {
         switch value {
-        case let .bool(b): return b
-        case let .string(s): return s == "true"
+        case let .bool(flag): return flag
+        case let .string(str): return str == "true"
         default: return nil
         }
     }
@@ -229,19 +229,22 @@ enum MCPToolHandler {
             "hasWriteAccess": String(state.hasWriteAccess),
             "hint": state == .fullAccess
                 ? "Calendar access is granted."
-                : "Call the auth_grant tool to request access. After granting, the MCP server must be restarted (reconnect the MCP client). Do NOT tell the user to run CLI commands — permissions are per-application."
+                : "Call the auth_grant tool to request access. After granting, the MCP server must be restarted. "
+                + "Do NOT tell the user to run CLI commands — permissions are per-application."
         ]
         return try toJSON(payload)
     }
 
     static func authGrant() throws -> String {
         let state = try EventKitAdapter.requestFullAccess()
+        let noAccessHint = "Access was not granted. Ask the user to enable calendar access "
+            + "in System Settings > Privacy & Security > Calendars, then restart the MCP server."
         let payload: [String: String] = [
             "state": state.rawValue,
             "granted": String(state == .fullAccess),
             "hint": state == .fullAccess
-                ? "Calendar access granted. The MCP server must be restarted for the new permission to take effect — ask the user to reconnect the MCP client."
-                : "Access was not granted. Ask the user to enable calendar access for this application in System Settings > Privacy & Security > Calendars, then restart the MCP server."
+                ? "Calendar access granted. Restart the MCP server for the new permission to take effect."
+                : noAccessHint
         ]
         return try toJSON(payload)
     }
@@ -506,6 +509,7 @@ enum MCPToolDefinitions {
 
     static let authStatusTool = Tool(
         name: "auth_status",
+        // swiftlint:disable:next line_length
         description: "Check calendar access authorization state. Call this first if other tools return permission errors. If access is not granted, call auth_grant — do NOT instruct the user to run terminal commands, as macOS permissions are per-application.",
         inputSchema: .object([
             "type": .string("object"),
@@ -515,6 +519,7 @@ enum MCPToolDefinitions {
 
     static let authGrantTool = Tool(
         name: "auth_grant",
+        // swiftlint:disable:next line_length
         description: "Request calendar access permission. Triggers the macOS permission dialog for this application. Call this if auth_status shows access is not granted. After the user grants access, the MCP server must be restarted (ask the user to reconnect the MCP client).",
         inputSchema: .object([
             "type": .string("object"),
@@ -524,6 +529,7 @@ enum MCPToolDefinitions {
 
     static let listCalendarsTool = Tool(
         name: "list_calendars",
+        // swiftlint:disable:next line_length
         description: "List all available calendars. Returns array of calendars with id, title, source (e.g. iCloud, Local), color, and writable status.",
         inputSchema: .object([
             "type": .string("object"),
@@ -551,6 +557,7 @@ enum MCPToolDefinitions {
 
     static let listEventsTool = Tool(
         name: "list_events",
+        // swiftlint:disable:next line_length
         description: "List events in a date range. Returns events sorted by start time. Use 'limit' to control how many results are returned (default 50).",
         inputSchema: .object([
             "type": .string("object"),
@@ -597,6 +604,7 @@ enum MCPToolDefinitions {
 
     static let searchEventsTool = Tool(
         name: "search_events",
+        // swiftlint:disable:next line_length
         description: "Search events by text query within a date range. Matches against title, location, and notes. Use 'limit' to control results (default 50).",
         inputSchema: .object([
             "type": .string("object"),
@@ -706,6 +714,7 @@ enum MCPToolDefinitions {
 
     static let updateEventTool = Tool(
         name: "update_event",
+        // swiftlint:disable:next line_length
         description: "Update an existing event. Only provide fields you want to change. Use 'expectedRevision' for optimistic concurrency (get it from get_event). For recurring events, use 'scope' to control which occurrences are affected.",
         inputSchema: .object([
             "type": .string("object"),
@@ -760,6 +769,7 @@ enum MCPToolDefinitions {
 
     static let deleteEventTool = Tool(
         name: "delete_event",
+        // swiftlint:disable:next line_length
         description: "Delete an event. For recurring events, use 'scope' to control deletion. Use 'expectedRevision' for safe concurrent access.",
         inputSchema: .object([
             "type": .string("object"),

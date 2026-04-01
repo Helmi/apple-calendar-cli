@@ -82,12 +82,12 @@ final class MCPTests: XCTestCase {
 
     func testListEventsRespectsLimit() throws {
         let store = InMemoryCalendarStore()
-        for i in 1 ... 10 {
+        for idx in 1 ... 10 {
             _ = try store.createEvent(input: EventCreateInput(
                 calendarId: "cal-default",
-                title: "Event \(i)",
-                start: DateCodec.parse("2026-04-01T0\(i):00:00Z"),
-                end: DateCodec.parse("2026-04-01T0\(i):30:00Z"),
+                title: "Event \(idx)",
+                start: DateCodec.parse("2026-04-01T0\(idx):00:00Z"),
+                end: DateCodec.parse("2026-04-01T0\(idx):30:00Z"),
                 timezone: .current,
                 allDay: false
             ))
@@ -213,11 +213,11 @@ final class MCPTests: XCTestCase {
 
     func testSearchEventsRespectsLimit() throws {
         let store = InMemoryCalendarStore()
-        for i in 1 ... 5 {
+        for idx in 1 ... 5 {
             _ = try store.createEvent(input: EventCreateInput(
-                calendarId: "cal-default", title: "Meeting \(i)",
-                start: DateCodec.parse("2026-04-01T0\(i):00:00Z"),
-                end: DateCodec.parse("2026-04-01T0\(i):30:00Z"),
+                calendarId: "cal-default", title: "Meeting \(idx)",
+                start: DateCodec.parse("2026-04-01T0\(idx):00:00Z"),
+                end: DateCodec.parse("2026-04-01T0\(idx):30:00Z"),
                 timezone: .current, allDay: false
             ))
         }
