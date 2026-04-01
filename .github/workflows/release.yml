@@ -144,6 +144,25 @@ jobs:
           echo "asset_base=${ASSET_BASE}" >> "$GITHUB_OUTPUT"
           echo "asset_sha256=${ASSET_SHA256}" >> "$GITHUB_OUTPUT"
 
+      - name: Build macOS installer (.pkg)
+        env:
+          APPLE_INSTALLER_IDENTITY: ${{ secrets.APPLE_INSTALLER_IDENTITY }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${APPLE_INSTALLER_IDENTITY}" ]]; then
+            scripts/build-pkg.sh \
+              --binary dist/release/acal \
+              --version "${RELEASE_VERSION}" \
+              --output "dist/release/${ASSET_BASE}.pkg" \
+              --sign "${APPLE_INSTALLER_IDENTITY}"
+          else
+            scripts/build-pkg.sh \
+              --binary dist/release/acal \
+              --version "${RELEASE_VERSION}" \
+              --output "dist/release/${ASSET_BASE}.pkg"
+          fi
+          shasum -a 256 "dist/release/${ASSET_BASE}.pkg" > "dist/release/${ASSET_BASE}.pkg.sha256"
+
       - name: Notarize zip
         env:
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
@@ -172,6 +191,8 @@ jobs:
           files: |
             dist/release/${{ env.ASSET_BASE }}.zip
             dist/release/${{ env.ASSET_BASE }}.zip.sha256
+            dist/release/${{ env.ASSET_BASE }}.pkg
+            dist/release/${{ env.ASSET_BASE }}.pkg.sha256
 
   update-homebrew-tap:
     name: Update Homebrew tap formula

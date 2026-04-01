@@ -7,7 +7,7 @@ import Formatting
 import Foundation
 
 @main
-struct ACal: ParsableCommand {
+struct ACal: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "acal",
         abstract: "A CLI for working with macOS Calendar.",
@@ -17,6 +17,7 @@ struct ACal: ParsableCommand {
           - auth
           - calendars
           - events
+          - mcp
           - completion
           - schema
 
@@ -27,15 +28,20 @@ struct ACal: ParsableCommand {
             AuthCommand.self,
             CalendarsCommand.self,
             EventsCommand.self,
+            MCPCommand.self,
             CompletionCommand.self,
             SchemaCommand.self
         ]
     )
 
-    static func main() {
+    static func main() async {
         do {
             var command = try parseAsRoot()
-            try command.run()
+            if var asyncCommand = command as? AsyncParsableCommand {
+                try await asyncCommand.run()
+            } else {
+                try command.run()
+            }
         } catch let acalError as ACalError {
             writeToStandardError("Error [\(acalError.code.rawValue)]: \(acalError.message.text)")
             Darwin.exit(acalError.exitCode.rawValue)
@@ -49,7 +55,7 @@ struct ACal: ParsableCommand {
         }
     }
 
-    mutating func run() throws {
+    mutating func run() async throws {
         throw CleanExit.helpRequest(self)
     }
 

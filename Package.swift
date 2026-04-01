@@ -11,7 +11,8 @@ let package = Package(
         .executable(name: "acal", targets: ["App"])
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0")
+        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0"),
+        .package(url: "https://github.com/modelcontextprotocol/swift-sdk.git", from: "0.11.0")
     ],
     targets: [
         .executableTarget(
@@ -21,7 +22,8 @@ let package = Package(
                 "EventKitAdapter",
                 "Formatting",
                 "Diagnostics",
-                .product(name: "ArgumentParser", package: "swift-argument-parser")
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .product(name: "MCP", package: "swift-sdk")
             ]
         ),
         .target(name: "AppCore"),
