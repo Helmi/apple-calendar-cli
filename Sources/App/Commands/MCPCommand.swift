@@ -151,17 +151,28 @@ struct MCPCommand: AsyncParsableCommand {
                         expectedRevision: MCPArgExtract.int(args["expectedRevision"])
                     )
                 default:
-                    return .init(content: [.text(text: "Unknown tool '\(params.name)'.", annotations: nil, _meta: nil)], isError: true)
+                    return .init(
+                        content: [.text(text: "Unknown tool '\(params.name)'.", annotations: nil, _meta: nil)],
+                        isError: true
+                    )
                 }
                 return .init(content: [.text(text: json, annotations: nil, _meta: nil)], isError: false)
             } catch let error as ACalError {
                 return .init(
-                    content: [.text(text: "Error [\(error.code.rawValue)]: \(error.message.text)", annotations: nil, _meta: nil)],
+                    content: [.text(
+                        text: "Error [\(error.code.rawValue)]: \(error.message.text)",
+                        annotations: nil,
+                        _meta: nil
+                    )],
                     isError: true
                 )
             } catch {
                 return .init(
-                    content: [.text(text: "Internal error: \(error.localizedDescription)", annotations: nil, _meta: nil)],
+                    content: [.text(
+                        text: "Internal error: \(error.localizedDescription)",
+                        annotations: nil,
+                        _meta: nil
+                    )],
                     isError: true
                 )
             }
@@ -178,31 +189,31 @@ struct MCPCommand: AsyncParsableCommand {
 enum MCPArgExtract {
     static func int(_ value: Value?) -> Int? {
         switch value {
-        case .int(let n): return n
-        case .double(let n): return Int(n)
-        case .string(let s): return Int(s)
+        case let .int(n): return n
+        case let .double(n): return Int(n)
+        case let .string(s): return Int(s)
         default: return nil
         }
     }
 
     static func bool(_ value: Value?) -> Bool? {
         switch value {
-        case .bool(let b): return b
-        case .string(let s): return s == "true"
+        case let .bool(b): return b
+        case let .string(s): return s == "true"
         default: return nil
         }
     }
 
     static func stringArray(_ value: Value?) -> [String] {
         switch value {
-        case .array(let items): return items.compactMap(\.stringValue)
+        case let .array(items): return items.compactMap(\.stringValue)
         default: return []
         }
     }
 
     static func intArray(_ value: Value?) -> [Int] {
         switch value {
-        case .array(let items): return items.compactMap { MCPArgExtract.int($0) }
+        case let .array(items): return items.compactMap { MCPArgExtract.int($0) }
         default: return []
         }
     }
@@ -724,13 +735,19 @@ enum MCPToolDefinitions {
                     "type": .string("integer"),
                     "description": .string("Expected current revision for optimistic concurrency check")
                 ]),
-                "repeat": .object(["type": .string("string"), "description": .string("Set recurrence: daily, weekly, monthly, yearly")]),
+                "repeat": .object([
+                    "type": .string("string"),
+                    "description": .string("Set recurrence: daily, weekly, monthly, yearly")
+                ]),
                 "interval": .object(["type": .string("integer"), "description": .string("Recurrence interval")]),
                 "byday": .object(["type": .string("string"), "description": .string("Comma-separated weekdays")]),
                 "until": .object(["type": .string("string"), "description": .string("Recurrence end date")]),
                 "count": .object(["type": .string("integer"), "description": .string("Recurrence occurrence count")]),
                 "rrule": .object(["type": .string("string"), "description": .string("Advanced RRULE string")]),
-                "clearRecurrence": .object(["type": .string("boolean"), "description": .string("Remove recurrence from event")]),
+                "clearRecurrence": .object([
+                    "type": .string("boolean"),
+                    "description": .string("Remove recurrence from event")
+                ]),
                 "alarmMinutes": .object([
                     "type": .string("array"),
                     "items": .object(["type": .string("integer")]),

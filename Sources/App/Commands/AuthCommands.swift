@@ -27,7 +27,7 @@ struct AuthStatusCommand: ParsableCommand {
 
     @OptionGroup var output: GlobalOutputOptions
 
-    struct Payload: Codable, Sendable {
+    struct Payload: Codable {
         let authorization: ACalAuthorizationState
         let writable: Bool
     }
@@ -53,7 +53,7 @@ struct AuthGrantCommand: ParsableCommand {
 
     @OptionGroup var output: GlobalOutputOptions
 
-    struct Payload: Codable, Sendable {
+    struct Payload: Codable {
         let authorization: ACalAuthorizationState
         let granted: Bool
     }
@@ -79,7 +79,7 @@ struct AuthResetCommand: ParsableCommand {
 
     @OptionGroup var output: GlobalOutputOptions
 
-    struct Payload: Codable, Sendable {
+    struct Payload: Codable {
         let steps: [String]
     }
 

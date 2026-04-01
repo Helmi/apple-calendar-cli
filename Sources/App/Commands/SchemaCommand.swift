@@ -8,17 +8,17 @@ struct SchemaCommand: ParsableCommand {
         abstract: "Print CLI schema and command contract metadata."
     )
 
-    struct CommandSpec: Codable, Sendable {
+    struct CommandSpec: Codable {
         let name: String
         let summary: String
     }
 
-    struct MCPToolSpec: Codable, Sendable {
+    struct MCPToolSpec: Codable {
         let name: String
         let summary: String
     }
 
-    struct SchemaPayload: Codable, Sendable {
+    struct SchemaPayload: Codable {
         let schemaVersion: String
         let commands: [CommandSpec]
         let mcpTools: [MCPToolSpec]

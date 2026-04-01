@@ -3,7 +3,6 @@
 import XCTest
 
 final class MCPTests: XCTestCase {
-
     // MARK: - Auth Status
 
     func testAuthStatusReturnsJSON() throws {
@@ -83,7 +82,7 @@ final class MCPTests: XCTestCase {
 
     func testListEventsRespectsLimit() throws {
         let store = InMemoryCalendarStore()
-        for i in 1...10 {
+        for i in 1 ... 10 {
             _ = try store.createEvent(input: EventCreateInput(
                 calendarId: "cal-default",
                 title: "Event \(i)",
@@ -214,7 +213,7 @@ final class MCPTests: XCTestCase {
 
     func testSearchEventsRespectsLimit() throws {
         let store = InMemoryCalendarStore()
-        for i in 1...5 {
+        for i in 1 ... 5 {
             _ = try store.createEvent(input: EventCreateInput(
                 calendarId: "cal-default", title: "Meeting \(i)",
                 start: DateCodec.parse("2026-04-01T0\(i):00:00Z"),
