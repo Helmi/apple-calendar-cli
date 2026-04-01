@@ -116,19 +116,12 @@ pkgbuild \
 # --- Build distribution pkg (nice UI) ---
 if [[ -n "$SIGN_IDENTITY" ]]; then
   echo "Signing pkg with: $SIGN_IDENTITY"
-  if ! timeout 60 productbuild \
+  productbuild \
     --distribution "$TMPDIR/distribution.xml" \
     --resources "$TMPDIR/resources" \
     --package-path "$TMPDIR" \
     --sign "$SIGN_IDENTITY" \
-    "$OUTPUT"; then
-    echo "Warning: Signed pkg build failed. Building unsigned pkg instead." >&2
-    productbuild \
-      --distribution "$TMPDIR/distribution.xml" \
-      --resources "$TMPDIR/resources" \
-      --package-path "$TMPDIR" \
-      "$OUTPUT"
-  fi
+    "$OUTPUT"
 else
   productbuild \
     --distribution "$TMPDIR/distribution.xml" \
