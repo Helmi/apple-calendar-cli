@@ -8,14 +8,20 @@ struct SchemaCommand: ParsableCommand {
         abstract: "Print CLI schema and command contract metadata."
     )
 
-    struct CommandSpec: Codable, Sendable {
+    struct CommandSpec: Codable {
         let name: String
         let summary: String
     }
 
-    struct SchemaPayload: Codable, Sendable {
+    struct MCPToolSpec: Codable {
+        let name: String
+        let summary: String
+    }
+
+    struct SchemaPayload: Codable {
         let schemaVersion: String
         let commands: [CommandSpec]
+        let mcpTools: [MCPToolSpec]
     }
 
     mutating func run() throws {
@@ -34,8 +40,21 @@ struct SchemaCommand: ParsableCommand {
                 CommandSpec(name: "events create", summary: "Create event"),
                 CommandSpec(name: "events update", summary: "Update event"),
                 CommandSpec(name: "events delete", summary: "Delete event"),
+                CommandSpec(name: "mcp", summary: "Start MCP server on stdio"),
                 CommandSpec(name: "completion bash|zsh|fish", summary: "Generate shell completion"),
                 CommandSpec(name: "schema", summary: "Print schema contract")
+            ],
+            mcpTools: [
+                MCPToolSpec(name: "auth_status", summary: "Check calendar access authorization"),
+                MCPToolSpec(name: "auth_grant", summary: "Request calendar access permission"),
+                MCPToolSpec(name: "list_calendars", summary: "List all calendars"),
+                MCPToolSpec(name: "get_calendar", summary: "Get calendar by id or name"),
+                MCPToolSpec(name: "list_events", summary: "List events in date range"),
+                MCPToolSpec(name: "get_event", summary: "Get event by id"),
+                MCPToolSpec(name: "search_events", summary: "Search events by text"),
+                MCPToolSpec(name: "create_event", summary: "Create a new event"),
+                MCPToolSpec(name: "update_event", summary: "Update an existing event"),
+                MCPToolSpec(name: "delete_event", summary: "Delete an event")
             ]
         )
 

@@ -175,6 +175,7 @@ final class ACalTests: XCTestCase {
             "auth",
             "calendars",
             "events",
+            "mcp",
             "completion",
             "schema"
         ]

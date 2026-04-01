@@ -18,12 +18,34 @@ Works with shell scripts, cron jobs, and AI agents — anything that can run a c
 
 ## Install
 
-### Homebrew (recommended)
+### One-line install
+
+```bash
+curl -sSL https://raw.githubusercontent.com/Helmi/acal-apple-calendar-cli/main/install.sh | sh
+```
+
+Downloads the latest signed binary, verifies the checksum, and installs to `/usr/local/bin`. Set `ACAL_INSTALL_DIR` to install elsewhere.
+
+### Homebrew
 
 ```bash
 brew tap Helmi/homebrew-tap
 brew install acal
 ```
+
+### Mint (Swift CLI manager)
+
+```bash
+mint install Helmi/acal-apple-calendar-cli
+```
+
+### macOS installer (.pkg)
+
+Download the installer: **[acal-0.3.0-macos-universal.pkg](https://github.com/Helmi/acal-apple-calendar-cli/releases/download/v0.3.0/acal-0.3.0-macos-universal.pkg)**
+
+Double-click to install. No terminal required. Works on both Apple Silicon and Intel Macs.
+
+The installer places `acal` in `/usr/local/bin`. See all versions on the [Releases](https://github.com/Helmi/acal-apple-calendar-cli/releases) page.
 
 ### Direct download
 
@@ -31,10 +53,10 @@ Download the latest `acal-<version>-macos-universal.zip` from [Releases](https:/
 
 ```bash
 curl -L -o acal.zip \
-  https://github.com/Helmi/acal-apple-calendar-cli/releases/download/v0.2.1/acal-0.2.1-macos-universal.zip
+  https://github.com/Helmi/acal-apple-calendar-cli/releases/download/v0.3.0/acal-0.3.0-macos-universal.zip
 unzip acal.zip
 chmod +x acal
-mv acal /opt/homebrew/bin/acal
+mv acal /usr/local/bin/acal
 ```
 
 ## Quick start
@@ -68,10 +90,84 @@ acal events create \
 | `auth status\|grant\|reset` | Manage calendar permissions |
 | `calendars list\|get` | List or inspect calendars |
 | `events list\|get\|search\|create\|update\|delete` | Full event lifecycle, including recurrence-safe edits |
+| `mcp` | Start MCP server on stdio for AI assistants |
 | `schema` | Print the stable JSON output contract |
 | `completion bash\|zsh\|fish` | Install shell completions |
 
 All commands accept `--format json` for machine-readable output.
+
+## MCP server mode
+
+`acal mcp` starts a [Model Context Protocol](https://modelcontextprotocol.io) server on stdio. This lets AI assistants like Claude access your calendar directly through structured tool calls instead of shell commands.
+
+### Setting up with Claude Desktop
+
+1. **Install acal** using any method above (Homebrew, installer, or the one-line script).
+
+2. **Find your config file.** Open Claude Desktop, then go to Settings (gear icon) and click "Developer" in the sidebar. Click "Edit Config" to open `claude_desktop_config.json`.
+
+3. **Add acal as an MCP server.** Add the following to the config file:
+
+   ```json
+   {
+     "mcpServers": {
+       "acal": {
+         "command": "/usr/local/bin/acal",
+         "args": ["mcp"]
+       }
+     }
+   }
+   ```
+
+   If you installed via Homebrew, use `/opt/homebrew/bin/acal` instead.
+
+4. **Restart Claude Desktop.** You should see a hammer icon in the chat input, showing acal's 10 calendar tools are available.
+
+5. **Grant calendar access.** The first time you ask Claude about your calendar, macOS will show a permission dialog. Click "Allow". Then restart Claude Desktop for the permission to take effect.
+
+6. **Try it out.** Ask Claude something like:
+
+   > "What's on my calendar this week?"
+
+   > "Schedule a team standup for tomorrow at 9am on my Work calendar"
+
+   > "Find all meetings with 'design' in the title this month"
+
+### Setting up with Claude Code
+
+Add to your project's `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "acal": {
+      "command": "acal",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+### Available MCP tools
+
+| Tool | What it does |
+|---|---|
+| `auth_status` | Check calendar access permissions |
+| `auth_grant` | Request calendar access (triggers macOS permission dialog) |
+| `list_calendars` | List all calendars |
+| `get_calendar` | Get calendar by ID or name |
+| `list_events` | List events in a date range (default limit: 50) |
+| `get_event` | Get event by ID or external ID |
+| `search_events` | Search events by text (default limit: 50) |
+| `create_event` | Create a new event with optional recurrence and alarms |
+| `update_event` | Update event fields with optimistic concurrency |
+| `delete_event` | Delete event with scope control for recurring events |
+
+### Testing with MCP Inspector
+
+```bash
+npx @modelcontextprotocol/inspector acal mcp
+```
 
 ## For agents and scripts
 

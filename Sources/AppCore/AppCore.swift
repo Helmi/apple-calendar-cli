@@ -35,7 +35,7 @@ public enum ACalLimits {
 
 public enum ACalBuildInfo {
     /// Binary release version (SemVer). Keep this independent from ACalSchema.version.
-    public static let releaseVersion = "0.2.1"
+    public static let releaseVersion = "0.3.0"
 
     public static let version: String = {
         if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String, !version.isEmpty {

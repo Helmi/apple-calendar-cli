@@ -144,7 +144,26 @@ jobs:
           echo "asset_base=${ASSET_BASE}" >> "$GITHUB_OUTPUT"
           echo "asset_sha256=${ASSET_SHA256}" >> "$GITHUB_OUTPUT"
 
-      - name: Notarize zip
+      - name: Build macOS installer (.pkg)
+        env:
+          APPLE_INSTALLER_IDENTITY: ${{ secrets.APPLE_INSTALLER_IDENTITY }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${APPLE_INSTALLER_IDENTITY}" ]]; then
+            scripts/build-pkg.sh \
+              --binary dist/release/acal \
+              --version "${RELEASE_VERSION}" \
+              --output "dist/release/${ASSET_BASE}.pkg" \
+              --sign "${APPLE_INSTALLER_IDENTITY}"
+          else
+            scripts/build-pkg.sh \
+              --binary dist/release/acal \
+              --version "${RELEASE_VERSION}" \
+              --output "dist/release/${ASSET_BASE}.pkg"
+          fi
+          shasum -a 256 "dist/release/${ASSET_BASE}.pkg" > "dist/release/${ASSET_BASE}.pkg.sha256"
+
+      - name: Notarize zip and pkg
         env:
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
@@ -155,6 +174,12 @@ jobs:
           printf '%s' "$APPLE_API_PRIVATE_KEY" > "$KEY_PATH"
 
           xcrun notarytool submit "dist/release/${ASSET_BASE}.zip" \
+            --key "$KEY_PATH" \
+            --key-id "$APPLE_API_KEY_ID" \
+            --issuer "$APPLE_API_ISSUER_ID" \
+            --wait
+
+          xcrun notarytool submit "dist/release/${ASSET_BASE}.pkg" \
             --key "$KEY_PATH" \
             --key-id "$APPLE_API_KEY_ID" \
             --issuer "$APPLE_API_ISSUER_ID" \
@@ -172,6 +197,8 @@ jobs:
           files: |
             dist/release/${{ env.ASSET_BASE }}.zip
             dist/release/${{ env.ASSET_BASE }}.zip.sha256
+            dist/release/${{ env.ASSET_BASE }}.pkg
+            dist/release/${{ env.ASSET_BASE }}.pkg.sha256
 
   update-homebrew-tap:
     name: Update Homebrew tap formula
