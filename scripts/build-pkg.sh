@@ -49,15 +49,19 @@ chmod 755 "$TMPDIR/scripts/postinstall"
 # --- Welcome text for the installer UI ---
 mkdir -p "$TMPDIR/resources"
 cat > "$TMPDIR/resources/welcome.html" << WELCOME
-<html><body style="font-family: -apple-system, Helvetica Neue, sans-serif; padding: 20px;">
-<h1>acal — Apple Calendar CLI</h1>
-<p>This installer will place the <code>acal</code> command-line tool in <code>/usr/local/bin</code>.</p>
-<p>After installation, open Terminal and run:</p>
-<pre style="background: #f5f5f5; padding: 12px; border-radius: 6px; font-size: 13px;">
-acal auth grant     # grant calendar access (one time)
-acal calendars list # see your calendars
-acal mcp --help     # AI assistant integration</pre>
-<p style="color: #666; font-size: 12px;">Version ${VERSION} — Universal binary (Apple Silicon + Intel)</p>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: -apple-system, Helvetica Neue, sans-serif; padding: 20px;">
+<h1>acal &#8212; Apple Calendar CLI</h1>
+<p>This installer places the <code>acal</code> command-line tool on your Mac.</p>
+<p><strong>Getting started:</strong></p>
+<pre style="background: #f5f5f5; padding: 12px; border-radius: 6px; font-size: 13px;">acal auth grant      # grant calendar access (one time)
+acal calendars list  # see your calendars
+acal events list     # list upcoming events
+acal mcp --help      # AI assistant integration</pre>
+<p style="margin-top: 16px;">For AI assistants like Claude, run <code>acal mcp</code> to start the
+<a href="https://modelcontextprotocol.io">MCP</a> server.</p>
+<p style="color: #666; font-size: 12px;">Version ${VERSION} &#8212; Universal binary (Apple Silicon + Intel)</p>
 </body></html>
 WELCOME
 
@@ -87,11 +91,11 @@ LICENSE
 cat > "$TMPDIR/distribution.xml" << DIST
 <?xml version="1.0" encoding="utf-8"?>
 <installer-gui-script minSpecVersion="2">
-    <title>acal — Apple Calendar CLI</title>
+    <title>acal &#8212; Apple Calendar CLI</title>
     <welcome file="welcome.html" />
     <license file="license.html" />
     <options customize="never" require-scripts="false" hostArchitectures="arm64,x86_64" />
-    <domains enable_localSystem="true" />
+    <domains enable_localSystem="true" enable_currentUserHome="true" />
     <choices-outline>
         <line choice="default">
             <line choice="com.helmi.acal.pkg" />
