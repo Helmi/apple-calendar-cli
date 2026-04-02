@@ -9,15 +9,8 @@ struct MCPCommand: AsyncParsableCommand {
         commandName: "mcp",
         abstract: "Start an MCP server on stdio for AI assistant integration.",
         discussion: """
-        Exposes calendar operations as MCP tools for use with Claude Desktop,
-        Claude Code, and other MCP-compatible AI assistants.
-
-        Configure in Claude Desktop's claude_desktop_config.json:
-          {
-            "mcpServers": {
-              "acal": { "command": "acal", "args": ["mcp"] }
-            }
-          }
+        Exposes calendar operations as MCP tools over stdio using the
+        Model Context Protocol (MCP). Compatible with any MCP client.
         """
     )
 
@@ -232,22 +225,20 @@ enum MCPToolHandler {
             "hasWriteAccess": String(state.hasWriteAccess),
             "hint": state == .fullAccess
                 ? "Calendar access is granted."
-                : "Call the auth_grant tool to request access. After granting, the MCP server must be restarted. "
-                + "Do NOT tell the user to run CLI commands — permissions are per-application."
+                : "Calendar access is not granted. Call auth_grant to request it."
         ]
         return try toJSON(payload)
     }
 
     static func authGrant() throws -> String {
         let state = try EventKitAdapter.requestFullAccess()
-        let noAccessHint = "Access was not granted. Ask the user to enable calendar access "
-            + "in System Settings > Privacy & Security > Calendars, then restart the MCP server."
         let payload: [String: String] = [
             "state": state.rawValue,
             "granted": String(state == .fullAccess),
             "hint": state == .fullAccess
-                ? "Calendar access granted. Restart the MCP server for the new permission to take effect."
-                : noAccessHint
+                ? "Calendar access granted."
+                : "Access was not granted. If no dialog appeared, run 'acal auth grant' in a terminal first. "
+                + "macOS only shows permission dialogs from terminal applications."
         ]
         return try toJSON(payload)
     }
@@ -518,8 +509,7 @@ enum MCPToolDefinitions {
 
     static let authStatusTool = Tool(
         name: "auth_status",
-        // swiftlint:disable:next line_length
-        description: "Check calendar access authorization state. Call this first if other tools return permission errors. If access is not granted, call auth_grant — do NOT instruct the user to run terminal commands, as macOS permissions are per-application.",
+        description: "Check calendar access authorization state.",
         inputSchema: .object([
             "type": .string("object"),
             "properties": .object([:])
@@ -528,8 +518,7 @@ enum MCPToolDefinitions {
 
     static let authGrantTool = Tool(
         name: "auth_grant",
-        // swiftlint:disable:next line_length
-        description: "Request calendar access permission. Triggers the macOS permission dialog for this application. Call this if auth_status shows access is not granted. After the user grants access, the MCP server must be restarted (ask the user to reconnect the MCP client).",
+        description: "Request calendar access permission. Triggers the macOS permission dialog.",
         inputSchema: .object([
             "type": .string("object"),
             "properties": .object([:])

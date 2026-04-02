@@ -65,7 +65,10 @@ public enum EventKitAdapter {
             }
         }
 
-        semaphore.wait()
+        let result = semaphore.wait(timeout: .now() + 30)
+        if result == .timedOut {
+            return .denied
+        }
 
         if let requestError = box.error {
             throw ACalError(
@@ -362,8 +365,8 @@ public final class EventKitCalendarStore: CalendarStore, @unchecked Sendable {
 
     private func ensureReadAccess() throws {
         let state = EventKitAdapter.currentAuthorizationState()
-        guard state == .fullAccess else {
-            throw ACalError(code: .permissionDenied, message: "Read access requires full calendar permission.")
+        guard state == .fullAccess || state == .writeOnly else {
+            throw ACalError(code: .permissionDenied, message: "Read access requires calendar permission.")
         }
     }
 

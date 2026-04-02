@@ -85,6 +85,11 @@ jobs:
             -k "$BUILD_KEYCHAIN_PASSWORD" \
             "$KEYCHAIN_PATH"
 
+      - name: Run tests before release
+        run: |
+          set -euo pipefail
+          SWIFT_DISABLE_SANDBOX=1 swift test
+
       - name: Build release binaries (arm64 + x86_64)
         run: |
           set -euo pipefail

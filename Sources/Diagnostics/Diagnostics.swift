@@ -22,10 +22,10 @@ public struct DoctorReport: Codable, Sendable {
 }
 
 public enum AuthResetGuidance {
-    public static func steps(bundleIdentifier: String = "acal") -> [String] {
+    public static func steps() -> [String] {
         [
             "Quit terminals and agents currently using acal.",
-            "Reset Calendar privacy permissions with: tccutil reset Calendar \(bundleIdentifier)",
+            "Reset Calendar privacy permissions with: tccutil reset Calendar",
             "Re-run `acal auth grant` and approve access when prompted.",
             "Validate with `acal auth status --format json`."
         ]
