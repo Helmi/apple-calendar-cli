@@ -237,7 +237,8 @@ enum MCPToolHandler {
             "granted": String(state == .fullAccess),
             "hint": state == .fullAccess
                 ? "Calendar access granted."
-                : "Access was not granted. The user may need to approve the macOS permission dialog."
+                : "Access was not granted. If no dialog appeared, run 'acal auth grant' in a terminal first. "
+                + "macOS only shows permission dialogs from terminal applications."
         ]
         return try toJSON(payload)
     }
