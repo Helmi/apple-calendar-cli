@@ -27,7 +27,7 @@ public enum AuthResetGuidance {
             "Quit terminals and agents currently using acal.",
             "Reset Calendar privacy permissions with: tccutil reset Calendar",
             "Re-run `acal auth grant` and approve access when prompted.",
-            "Validate with `acal auth status --format json`.",
+            "Validate with `acal auth status --format json`."
         ]
     }
 }
