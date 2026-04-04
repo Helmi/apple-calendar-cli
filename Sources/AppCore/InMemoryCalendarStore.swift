@@ -64,8 +64,24 @@ public final class InMemoryCalendarStore: CalendarStore, @unchecked Sendable {
                 all.append(contentsOf: subset)
             }
 
-            let unique = Dictionary(uniqueKeysWithValues: all.map { ($0.id, $0) })
-            return unique.values.sorted { $0.start < $1.start }
+            var seen = Set<EventListIdentity>()
+            var deduped: [EventRecord] = []
+            deduped.reserveCapacity(all.count)
+
+            for event in all {
+                let identity = EventListIdentity(
+                    id: event.id,
+                    calendarId: event.calendarId,
+                    occurrenceStart: event.occurrenceStart ?? event.start,
+                    end: event.end
+                )
+
+                if seen.insert(identity).inserted {
+                    deduped.append(event)
+                }
+            }
+
+            return deduped.sorted { $0.start < $1.start }
         }
     }
 
@@ -213,4 +229,11 @@ public final class InMemoryCalendarStore: CalendarStore, @unchecked Sendable {
             ]
         }
     }
+}
+
+private struct EventListIdentity: Hashable {
+    let id: String
+    let calendarId: String
+    let occurrenceStart: String
+    let end: String
 }

@@ -191,8 +191,8 @@ public final class EventKitCalendarStore: CalendarStore, @unchecked Sendable {
                 all.append(contentsOf: store.events(matching: predicate))
             }
 
-            let deduped = Dictionary(uniqueKeysWithValues: all.map { ($0.calendarItemIdentifier, $0) })
-            return deduped.values
+            let deduped = deduplicateListEvents(all)
+            return deduped
                 .map(serialize(event:))
                 .sorted { $0.start < $1.start }
         }
@@ -393,6 +393,27 @@ public final class EventKitCalendarStore: CalendarStore, @unchecked Sendable {
         Int(event.lastModifiedDate?.timeIntervalSince1970 ?? 0)
     }
 
+    private func deduplicateListEvents(_ events: [EKEvent]) -> [EKEvent] {
+        var seen = Set<EventListIdentity>()
+        var deduped: [EKEvent] = []
+        deduped.reserveCapacity(events.count)
+
+        for event in events {
+            let identity = EventListIdentity(
+                calendarItemIdentifier: event.calendarItemIdentifier,
+                calendarIdentifier: event.calendar.calendarIdentifier,
+                occurrenceStart: event.occurrenceDate ?? event.startDate,
+                end: event.endDate
+            )
+
+            if seen.insert(identity).inserted {
+                deduped.append(event)
+            }
+        }
+
+        return deduped
+    }
+
     private func serialize(event: EKEvent) -> EventRecord {
         let recurrence = event.recurrenceRules?.first.flatMap { rule -> RecurrenceRuleRecord? in
             let frequency: RecurrenceFrequency
@@ -459,7 +480,7 @@ public final class EventKitCalendarStore: CalendarStore, @unchecked Sendable {
             allDay: event.isAllDay,
             recurrence: recurrence,
             alarms: alarms,
-            occurrenceStart: nil,
+            occurrenceStart: (event.occurrenceDate ?? event.startDate).map(DateCodec.iso8601String(from:)),
             seriesMasterId: event.hasRecurrenceRules ? event.calendarItemIdentifier : nil,
             revision: revision(for: event)
         )
@@ -469,6 +490,13 @@ public final class EventKitCalendarStore: CalendarStore, @unchecked Sendable {
 private final class AuthorizationResultBox: @unchecked Sendable {
     var granted = false
     var error: Error?
+}
+
+private struct EventListIdentity: Hashable {
+    let calendarItemIdentifier: String
+    let calendarIdentifier: String
+    let occurrenceStart: Date
+    let end: Date
 }
 
 private extension CGColor {
