@@ -480,7 +480,7 @@ public final class EventKitCalendarStore: CalendarStore, @unchecked Sendable {
             allDay: event.isAllDay,
             recurrence: recurrence,
             alarms: alarms,
-            occurrenceStart: (event.occurrenceDate ?? event.startDate).map(DateCodec.iso8601String(from:)),
+            occurrenceStart: DateCodec.iso8601String(from: event.occurrenceDate ?? event.startDate),
             seriesMasterId: event.hasRecurrenceRules ? event.calendarItemIdentifier : nil,
             revision: revision(for: event)
         )
