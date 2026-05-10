@@ -297,17 +297,23 @@ public final class EventKitCalendarStore: CalendarStore, @unchecked Sendable {
                 url: input.url?.absoluteString
             )
 
-            guard let event = store.calendarItem(withIdentifier: id) as? EKEvent else {
+            guard let masterEvent = store.calendarItem(withIdentifier: id) as? EKEvent else {
                 throw ACalError.notFound("Event '\(id)' was not found.")
             }
 
-            let currentRevision = revision(for: event)
+            let currentRevision = revision(for: masterEvent)
             if let expectedRevision = input.expectedRevision, expectedRevision != currentRevision {
                 throw ACalError.conflict(
                     "Event revision mismatch.",
                     details: ["expected": String(expectedRevision), "current": String(currentRevision)]
                 )
             }
+
+            let event = try resolveTargetEvent(
+                masterEvent: masterEvent,
+                scope: scope,
+                occurrenceStart: occurrenceStart
+            )
 
             if let title = input.title { event.title = title }
             if let start = input.start { event.startDate = start }
@@ -342,11 +348,11 @@ public final class EventKitCalendarStore: CalendarStore, @unchecked Sendable {
         try queue.sync {
             try ensureWriteAccess()
 
-            guard let event = store.calendarItem(withIdentifier: id) as? EKEvent else {
+            guard let masterEvent = store.calendarItem(withIdentifier: id) as? EKEvent else {
                 throw ACalError.notFound("Event '\(id)' was not found.")
             }
 
-            let currentRevision = revision(for: event)
+            let currentRevision = revision(for: masterEvent)
             if let expectedRevision = input.expectedRevision, expectedRevision != currentRevision {
                 throw ACalError.conflict(
                     "Event revision mismatch.",
@@ -354,11 +360,12 @@ public final class EventKitCalendarStore: CalendarStore, @unchecked Sendable {
                 )
             }
 
-            if input.scope != .all, input.occurrenceStart == nil {
-                throw ACalError.validation("--occurrence-start is required when scope is this or future.")
-            }
-
-            try store.remove(event, span: eventSpan(for: input.scope), commit: true)
+            let targetEvent = try resolveTargetEvent(
+                masterEvent: masterEvent,
+                scope: input.scope,
+                occurrenceStart: input.occurrenceStart
+            )
+            try store.remove(targetEvent, span: eventSpan(for: input.scope), commit: true)
             return ["id": id, "scope": input.scope.rawValue, "status": "deleted"]
         }
     }
@@ -387,6 +394,52 @@ public final class EventKitCalendarStore: CalendarStore, @unchecked Sendable {
         case .future, .all:
             return .futureEvents
         }
+    }
+
+    /// Resolves the EKEvent that mutations should be applied to.
+    ///
+    /// For `scope == .all`, returns the series master directly.
+    ///
+    /// For `scope == .this` or `.future`, EventKit's EKSpan semantics require the
+    /// caller to pass a SPECIFIC OCCURRENCE (an EKEvent whose `startDate` matches
+    /// the target occurrence) — passing the series master with `.thisEvent` or
+    /// `.futureEvents` is undefined behaviour and silently no-ops in practice.
+    /// We use `events(matching:)` to expand the recurrence over a small window
+    /// around `occurrenceStart` and pick the matching occurrence.
+    private func resolveTargetEvent(
+        masterEvent: EKEvent,
+        scope: EventDeleteScope,
+        occurrenceStart: Date?
+    ) throws -> EKEvent {
+        if scope == .all {
+            return masterEvent
+        }
+        guard let occStart = occurrenceStart else {
+            throw ACalError.validation("--occurrence-start is required when scope is this or future.")
+        }
+        // If the event is non-recurring there is only one occurrence (the master itself).
+        if masterEvent.recurrenceRules?.isEmpty ?? true {
+            return masterEvent
+        }
+        let calendars = [masterEvent.calendar].compactMap { $0 }
+        guard
+            let dayBefore = Calendar.current.date(byAdding: .day, value: -1, to: occStart),
+            let dayAfter = Calendar.current.date(byAdding: .day, value: 1, to: occStart)
+        else {
+            throw ACalError.validation("Could not compute occurrence search window for \(DateCodec.iso8601String(from: occStart)).")
+        }
+        let predicate = store.predicateForEvents(withStart: dayBefore, end: dayAfter, calendars: calendars)
+        let candidates = store.events(matching: predicate)
+            .filter { $0.calendarItemIdentifier == masterEvent.calendarItemIdentifier }
+        // 1-second tolerance to absorb floating-point drift in Date round-tripping.
+        guard let occurrence = candidates.first(where: {
+            abs($0.startDate.timeIntervalSince(occStart)) < 1.0
+        }) else {
+            throw ACalError.notFound(
+                "No occurrence at \(DateCodec.iso8601String(from: occStart)) for event '\(masterEvent.calendarItemIdentifier)'."
+            )
+        }
+        return occurrence
     }
 
     private func revision(for event: EKEvent) -> Int {
